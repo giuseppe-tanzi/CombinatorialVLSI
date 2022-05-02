@@ -3,6 +3,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Color, PatternFill, Font, Border, Side, Alignment
 from openpyxl.utils import get_column_letter
 import numpy as np
+import os
 
 # SET THE INSTANCE NUMBER
 instance_number = 1
@@ -53,7 +54,7 @@ with open(instance_path, 'r') as f:
     workbook = Workbook()
     sheet = workbook.active
 
-    worst_max_heigth = np.sum([x[0] for x in shapes])
+    worst_max_heigth = np.sum([y[1] for y in shapes])
 
     # setting the width of width column and creating the grid with borders
     for i in range(1,width+1):
@@ -77,10 +78,12 @@ with open(instance_path, 'r') as f:
 
         for x in range(starting_x, ending_x):
             for y in range(starting_y, ending_y):
-                sheet.cell(row=x, column=y).fill = color
-                sheet.cell(row=x, column=y).border = thin_border
-                sheet.cell(row=x, column=y).value = i
+                sheet.cell(row=y, column=x).fill = color
+                sheet.cell(row=y, column=x).border = thin_border
+                sheet.cell(row=y, column=x).value = i
 
+    if not os.path.exists('./displayed_solutions'):
+        os.mkdir('./displayed_solutions')
     workbook.save(filename='./displayed_solutions/instance_' + str(instance_number) + ".xlsx")
 
 
