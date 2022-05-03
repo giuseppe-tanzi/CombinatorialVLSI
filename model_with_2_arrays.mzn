@@ -13,6 +13,7 @@ int: X = W - min([shapes[i,1] | i in BLOCKS]);
 array[BLOCKS] of var 0..X: coords_x;
 array[BLOCKS] of var 0..Y: coords_y;
 
+% only the right box can't be bigger than the maximum width W.
 constraint  max([coords_x[i] + shapes[i,1] | i in BLOCKS]) <= W;
                  
 % Global constraint for no overlapping rectangles.
