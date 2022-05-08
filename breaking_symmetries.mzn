@@ -24,11 +24,29 @@ constraint diffn(
   [shapes[i,2] | i in BLOCKS]);
 
 % the total height should be as low as possible. 
-% var int: H = sum([coords[i,2] + shapes[i,2] | i in BLOCKS]);
 var int: H = max([coords[i,2] + shapes[i,2] | i in BLOCKS]);
-% var int: H = max([coords[i,2] | i in BLOCKS]);
 
+% breaking symmetries.
+include "lex_lesseq.mzn";
+% MAXIMUM EFFECTIVE WIDTH
+var int: W_E = max([coords[i,1] + shapes[i,1] | i in BLOCKS]);
 
+constraint
+    lex_lesseq([coords[i,1] | i in BLOCKS],
+     [((W_E - (W_E div 2)) + ((W_E div 2)- coords[i,1]) - shapes[i,1]) | i in BLOCKS])
+;
+
+%constraint
+%    lex_lesseq([coords[i,2] | i in BLOCKS],
+%     [((H - (H div 2)) + ((H div 2)- coords[i,2]) - shapes[i,2]) | i in BLOCKS]);
+     
 solve minimize H;
 
+
+%solve :: int_search(coords, input_order, indomain_min) 
+%      :: restart_luby(250) 
+%      minimize H;
+
 output ["Height : "] ++ [show(H)] ++ [" "] ++ [show(coords)];
+
+

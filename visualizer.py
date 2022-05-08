@@ -6,10 +6,10 @@ import numpy as np
 import os
 
 # SET THE INSTANCE NUMBER
-instance_number = 1
+instance_number = 24
 
 # INSERT HERE YOUR SOLUTION
-solution = [5, 5, 5, 0, 0, 5, 0, 0]
+solution = [6, 22, 3, 27, 28, 11, 6, 25, 28, 16, 24, 23, 21, 22, 25, 0, 28, 0, 21, 10, 3, 0, 3, 13, 6, 0, 0, 0, 21, 7, 21, 0, 27, 23, 24, 10, 9, 0]
 
 
 # re-organized solution in e.g. [5, 5, 5, 0, 0, 5, 0, 0] -> [[5, 5], [5, 0], [0, 5], [0, 0]]
@@ -84,6 +84,7 @@ with open(instance_path, 'r') as f:
 
     if not os.path.exists('./displayed_solutions'):
         os.mkdir('./displayed_solutions')
+
     workbook.save(filename='./displayed_solutions/instance_' + str(instance_number) + ".xlsx")
 
 
