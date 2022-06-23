@@ -7,11 +7,14 @@ set of int: BLOCKS = 1..N;
 
 array[BLOCKS, 1..2] of int: shapes;  % matrix containing (w,h) of each block
 
-int: Y = sum([shapes[i,2] | i in BLOCKS]) - min([shapes[i,2] | i in BLOCKS]);
-int: X = W - min([shapes[i,1] | i in BLOCKS]);
+int: max_X = W - min([shapes[i,1] | i in BLOCKS]);
+int: max_H = sum([shapes[i,2] | i in BLOCKS]);
+int: max_Y = max_H - min([shapes[i,2] | i in BLOCKS]);
+int: min_H = sum([shapes[i,2] * shapes[i,1]| i in BLOCKS]) div W;
 
-array[BLOCKS] of var 0..X: coords_x;
-array[BLOCKS] of var 0..Y: coords_y;
+
+array[BLOCKS] of var 0..max_X: coords_x;
+array[BLOCKS] of var 0..max_Y: coords_y;
 
 % only the right box can't be bigger than the maximum width W.
 constraint  max([coords_x[i] + shapes[i,1] | i in BLOCKS]) <= W;
@@ -28,18 +31,26 @@ include "lex_lesseq.mzn";
 % MAXIMUM EFFECTIVE WIDTH
 var int: W_E = max([coords_x[i] + shapes[i,1] | i in BLOCKS]);
 
-constraint
-    lex_lesseq([coords_x[i] | i in BLOCKS],
-     [((W_E - (W_E div 2)) + ((W_E div 2) - coords_x[i]) - shapes[i,1]) | i in BLOCKS])
-;
+%constraint
+%    lex_lesseq([coords_x[i] | i in BLOCKS],
+%     [((W_E - (W_E div 2)) + ((W_E div 2) - coords_x[i]) - shapes[i,1]) | i in BLOCKS])
+%;
+
+constraint symmetry_breaking_constraint(
+  lex_lesseq([coords_x[i] | i in BLOCKS], [W_E - coords_x[i] - shapes[i,1] | i in BLOCKS])
+);
 
 % Cumulative constraint
 constraint cumulative([coords_y[i] | i in BLOCKS], [shapes[i,2] | i in BLOCKS], [shapes[i,1] | i in BLOCKS], W);
 
 % the total height should be as low as possible. 
-var int: H = max([coords_y[i] + shapes[i,2] | i in BLOCKS]);
+var min_H..max_H: H = max([coords_y[i] + shapes[i,2] | i in BLOCKS]);
 
-solve minimize H;
+solve :: seq_search([
+    int_search(coords_y, first_fail, indomain_min),
+    int_search(coords_x, first_fail, indomain_min),
+    int_search([H], smallest, indomain_min)])
+    minimize H;
 
 output ["Height : "] ++ [show(H)];
 output ["\nCoord X: "] ++ [show(coords_x)];
