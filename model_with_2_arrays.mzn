@@ -22,6 +22,19 @@ constraint diffn(
   [coords_y[i] | i in BLOCKS],
   [shapes[i,1] | i in BLOCKS],
   [shapes[i,2] | i in BLOCKS]);
+  
+% breaking symmetries.
+include "lex_lesseq.mzn";
+% MAXIMUM EFFECTIVE WIDTH
+var int: W_E = max([coords_x[i] + shapes[i,1] | i in BLOCKS]);
+
+constraint
+    lex_lesseq([coords_x[i] | i in BLOCKS],
+     [((W_E - (W_E div 2)) + ((W_E div 2) - coords_x[i]) - shapes[i,1]) | i in BLOCKS])
+;
+
+% Cumulative constraint
+constraint cumulative([coords_y[i] | i in BLOCKS], [shapes[i,2] | i in BLOCKS], [shapes[i,1] | i in BLOCKS], W);
 
 % the total height should be as low as possible. 
 var int: H = max([coords_y[i] + shapes[i,2] | i in BLOCKS]);
