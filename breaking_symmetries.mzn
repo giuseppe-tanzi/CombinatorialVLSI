@@ -42,7 +42,7 @@ constraint
 
 %constraint
 %    lex_lesseq([coords[i,2] | i in BLOCKS],
-%     [((H - (H div 2)) + ((H div 2)- coords[i,2]) - shapes[i,2]) | i in BLOCKS]);
+%     [((H - coords[i,2]) - shapes[i,2]) | i in BLOCKS]);
      
 solve :: int_search(coords, input_order, indomain_min)
       :: restart_luby(250) 

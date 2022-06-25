@@ -1,4 +1,5 @@
 include "globals.mzn";
+%mzn_ignore_symmetry_breaking_constraints=true
 
 int: W; % maximum width
 int: N; % number of blocks
@@ -21,27 +22,26 @@ constraint  max([coords_x[i] + shapes[i,1] | i in BLOCKS]) <= W;
                  
 % Global constraint for no overlapping rectangles.
 constraint diffn(
-  [coords_x[i] | i in BLOCKS],
-  [coords_y[i] | i in BLOCKS],
+  coords_x,
+  coords_y,
   [shapes[i,1] | i in BLOCKS],
   [shapes[i,2] | i in BLOCKS]);
   
 % breaking symmetries.
-include "lex_lesseq.mzn";
+include "lex_lesseq.mzn"; 
 % MAXIMUM EFFECTIVE WIDTH
 var int: W_E = max([coords_x[i] + shapes[i,1] | i in BLOCKS]);
 
-%constraint
-%    lex_lesseq([coords_x[i] | i in BLOCKS],
-%     [((W_E - (W_E div 2)) + ((W_E div 2) - coords_x[i]) - shapes[i,1]) | i in BLOCKS])
-%;
+constraint symmetry_breaking_constraint(
+  lex_lesseq(coords_y, [H - coords_y[i] - shapes[i,2] | i in BLOCKS])
+);
 
 constraint symmetry_breaking_constraint(
-  lex_lesseq([coords_x[i] | i in BLOCKS], [W_E - coords_x[i] - shapes[i,1] | i in BLOCKS])
+  lex_lesseq(coords_x, [W_E - coords_x[i] - shapes[i,1] | i in BLOCKS])
 );
 
 % Cumulative constraint
-constraint cumulative([coords_y[i] | i in BLOCKS], [shapes[i,2] | i in BLOCKS], [shapes[i,1] | i in BLOCKS], W);
+constraint cumulative(coords_y, [shapes[i,2] | i in BLOCKS], [shapes[i,1] | i in BLOCKS], W);
 
 % the total height should be as low as possible. 
 var min_H..max_H: H = max([coords_y[i] + shapes[i,2] | i in BLOCKS]);
