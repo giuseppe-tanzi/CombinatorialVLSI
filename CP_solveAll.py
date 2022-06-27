@@ -3,8 +3,8 @@ import os
 from glob import glob
 from instance_solver import solve_instance
 
-default_in_dir = "..\instances_dzn" if os.name == 'nt' else "../instances_txt"
-default_out_dir = "..\out" if os.name == 'nt' else "../out"
+default_in_dir = ".\\instances_dzn"
+default_out_dir = ".\\out"
 
 
 def main():
@@ -43,16 +43,15 @@ def main():
 
         print(f"\nSOLVING INSTANCE {i + 1}:")
 
-        cores = 1
-
-        if args.symmetries:
-            solve_instance(cores, "model_symmetries.mzn", in_file, out_dir)
-        elif args.channel:
-            solve_instance(cores, "model_channel.mzn", in_file, out_dir)
-        elif args.rotation:
-            solve_instance(cores, "model_rotation.mzn", in_file, out_dir)
-        else:
-            solve_instance(cores, "model_final.mzn", in_file, out_dir)
+        solve_instance("model_with_2_arrays.mzn", in_file, out_dir)
+        # if args.symmetries:
+        #     solve_instance(cores, "model_symmetries.mzn", in_file, out_dir)
+        # elif args.channel:
+        #     solve_instance(cores, "model_channel.mzn", in_file, out_dir)
+        # elif args.rotation:
+        #     solve_instance(cores, "model_rotation.mzn", in_file, out_dir)
+        # else:
+        #     solve_instance(cores, "model_final.mzn", in_file, out_dir)
 
 
 if __name__ == '__main__':
