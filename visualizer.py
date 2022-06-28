@@ -6,10 +6,10 @@ import numpy as np
 import os
 
 # SET THE INSTANCE NUMBER
-instance_number = 24
+instance_number = 5
 
 # INSERT HERE YOUR SOLUTION
-solution = [13, 0, 13, 3, 0, 0, 0, 5, 16, 0, 0, 11, 6, 22, 12, 7, 9, 7, 0, 19, 9, 18, 12, 17, 6, 0, 3, 0, 15, 7, 9, 0, 15, 10, 15, 18, 19, 0]
+solution = [0, 0, 3, 0, 6, 0, 9, 0, 6, 5, 3, 4, 0, 3, 9, 6]
 
 
 # re-organized solution in e.g. [5, 5, 5, 0, 0, 5, 0, 0] -> [[5, 5], [5, 0], [0, 5], [0, 0]]

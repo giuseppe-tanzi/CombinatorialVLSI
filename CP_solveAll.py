@@ -43,7 +43,7 @@ def main():
 
         print(f"\nSOLVING INSTANCE {i + 1}:")
 
-        solve_instance("model_with_2_arrays.mzn", in_file, out_dir)
+        solve_instance("model_with_2_arrays.mzn", in_file, out_dir, solver='Gecode')
         # if args.symmetries:
         #     solve_instance(cores, "model_symmetries.mzn", in_file, out_dir)
         # elif args.channel:

@@ -14,49 +14,56 @@ int: max_H = sum([shapes[i,2] | i in BLOCKS]);
 int: max_Y = max_H - min([shapes[i,2] | i in BLOCKS]);
 int: min_H = sum([shapes[i,2] * shapes[i,1]| i in BLOCKS]) div W;
 
+array[BLOCKS] of var bool: rotation;
+
+array[BLOCKS] of var int: shape_x_r = [if rotation[i] then shapes[i,2] else shapes[i,1] endif | i in BLOCKS];
+
+array[BLOCKS] of var int: shape_y_r = [if rotation[i] then shapes[i,1] else shapes[i,2] endif | i in BLOCKS];
 
 array[BLOCKS] of var 0..max_X: coords_x;
 array[BLOCKS] of var 0..max_Y: coords_y;
 
 % only the right box can't be bigger than the maximum width W.
-constraint  max([coords_x[i] + shapes[i,1] | i in BLOCKS]) <= W;
+constraint  max([coords_x[i] + shape_x_r[i] | i in BLOCKS]) <= W;
                  
 % Global constraint for no overlapping rectangles.
 constraint diffn(
   coords_x,
   coords_y,
-  [shapes[i,1] | i in BLOCKS],
-  [shapes[i,2] | i in BLOCKS]);
+  shape_x_r,
+  shape_y_r);
   
-% breaking symmetries.
 include "lex_lesseq.mzn"; 
 % MAXIMUM EFFECTIVE WIDTH
-var int: W_E = max([coords_x[i] + shapes[i,1] | i in BLOCKS]);
+var int: W_E = max([coords_x[i] + shape_x_r[i] | i in BLOCKS]);
 
+constraint forall(i in BLOCKS)(shapes[i,2] > W -> rotation[i]==false);
+
+% breaking symmetries.
 constraint symmetry_breaking_constraint(
-  lex_lesseq(coords_y, [H - coords_y[i] - shapes[i,2] | i in BLOCKS])
+  lex_lesseq(coords_y, [H - coords_y[i] - shape_y_r[i] | i in BLOCKS])
 );
 
 constraint symmetry_breaking_constraint(
-  lex_lesseq(coords_x, [W_E - coords_x[i] - shapes[i,1] | i in BLOCKS])
+  lex_lesseq(coords_x, [W_E - coords_x[i] - shape_x_r[i] | i in BLOCKS])
+);
+
+% square rotation constraint
+constraint symmetry_breaking_constraint(
+  forall(i in BLOCKS)(shapes[i,2] == shapes[i,1] -> rotation[i]==false)
 );
 
 % Cumulative constraint
-constraint cumulative(coords_y, [shapes[i,2] | i in BLOCKS], [shapes[i,1] | i in BLOCKS], W);
+constraint cumulative(coords_y, shape_y_r, shape_x_r, W);
 
-constraint cumulative(coords_x, [shapes[i,1] | i in BLOCKS], [shapes[i,2] | i in BLOCKS], H);
-
+% the total height should be as low as possible. 
 constraint forall(i in BLOCKS) (H >= coords_y[i] + shapes[i,2]);
-
-%solve :: seq_search([
-%    int_search(coords_y, first_fail, indomain_min),
-%    int_search(coords_x, first_fail, indomain_min)])
-%    minimize H;
 
 solve 
   :: int_search([H], input_order, indomain_min)
   minimize H;
 
 output ["Height : "] ++ [show(H)];
+output ["\nRotation : "] ++ [show(rotation)];
 output ["\nCoord X: "] ++ [show(coords_x)];
 output ["\nCoord Y: "] ++ [show(coords_y)];
