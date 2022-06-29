@@ -3,8 +3,8 @@ import os
 from glob import glob
 from instance_solver import solve_instance
 
-default_in_dir = ".\\instances_dzn"
-default_out_dir = ".\\out"
+default_in_dir = "../../data/instances_dzn"
+default_out_dir = "../../out"
 
 
 def main():

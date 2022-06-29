@@ -82,8 +82,8 @@ with open(instance_path, 'r') as f:
                 sheet.cell(row=y, column=x).border = thin_border
                 sheet.cell(row=y, column=x).value = i
 
-    if not os.path.exists('./displayed_solutions'):
-        os.mkdir('./displayed_solutions')
+    if not os.path.exists('../../displayed_solutions'):
+        os.mkdir('../../displayed_solutions')
 
     workbook.save(filename='./displayed_solutions/instance_' + str(instance_number) + ".xlsx")
 
