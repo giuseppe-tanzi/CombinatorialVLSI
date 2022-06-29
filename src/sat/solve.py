@@ -3,32 +3,49 @@ import time
 from z3 import And, Or, Bool, sat, Not, Solver, Implies
 from itertools import combinations
 
-class SolverSAT:
+from utils.utils import write_solution
+
+
+class SATsolver:
 
     def __init__(self, timeout=300, rotation=False):
         self.timeout = timeout
         self.rotation = rotation
-        
-    def solve(self, data):
-        self.plate_width, self.circuits = data
+
+    def __init__(self, data, rotation, output_dir, timeout):
+        self.data = data
+        self.rotation = rotation
+        if output_dir == "":
+            output_dir = "../data/output_sat/"
+        self.output_dir = output_dir
+        self.timeout = timeout
+
+    def solve(self):
+        for d in self.data:
+            solution = self.solve_instance(d)
+            ins_num = d[0]
+            write_solution(ins_num, solution[0], solution[1])
+
+    def solve_instance(self, instance):
+        _, self.max_width, self.circuits = instance
         self.circuits_num = len(self.circuits)
 
-        self.w, self.h = ([ i for i, _ in self.circuits ], [ j for _, j in self.circuits ])
+        self.w, self.h = ([i for i, _ in self.circuits], [j for _, j in self.circuits])
 
-        lower_bound = sum([self.h[i]*self.w[i] for i in range(self.circuits_num)]) // self.plate_width
+        lower_bound = sum([self.h[i] * self.w[i] for i in range(self.circuits_num)]) // self.max_width
         upper_bound = sum(self.h)
 
         start_time = time.time()
         try_timeout = self.timeout
-        for plate_height in range(lower_bound, upper_bound+1):
+        for plate_height in range(lower_bound, upper_bound + 1):
             self.sol = Solver()
-            self.sol.set(timeout=self.timeout*1000)
-            board, rotations = self.add_constraints(plate_height)
+            self.sol.set(timeout=self.timeout * 1000)
+            plate, rotations = self.add_constraints(plate_height)
 
             solve_time = time.time()
             if self.sol.check() == sat:
-                circuits_pos = self.evaluate(plate_height, board, rotations)
-                return ((self.plate_width, plate_height), circuits_pos), (time.time() - solve_time)
+                circuits_pos = self.evaluate(plate_height, plate, rotations)
+                return ((self.max_width, plate_height), circuits_pos), (time.time() - solve_time)
             else:
                 try_timeout = round((self.timeout - (time.time() - start_time)))
                 if try_timeout < 0:
@@ -49,27 +66,29 @@ class SolverSAT:
         self.sol.add(self.at_least_one(bool_vars))
 
     def add_constraints(self, plate_height):
-        board = [[[Bool(f"b_{i}_{j}_{k}") for k in range(self.circuits_num)] for j in range(plate_height)] for i in range(self.plate_width)]
+        plate = [[[Bool(f"b_{i}_{j}_{k}") for k in range(self.circuits_num)] for j in range(plate_height)] for i in
+                 range(self.max_width)]
         rotations = None
 
-        xs = [[Bool(f"x_{i}_{j}") for j in range(self.circuits_num)] for i in range(self.plate_width)]
+        xs = [[Bool(f"x_{i}_{j}") for j in range(self.circuits_num)] for i in range(self.max_width)]
         ys = [[Bool(f"y_{i}_{j}") for j in range(self.circuits_num)] for i in range(plate_height)]
 
         for k in range(self.circuits_num):
             for y in range(plate_height):
-                p = self.at_least_one([board[x][y][k] for x in range(self.plate_width)])
+                p = self.at_least_one([plate[x][y][k] for x in range(self.max_width)])
                 self.sol.add(And(Implies(ys[y][k], p), Implies(p, ys[y][k])))
-            for x in range(self.plate_width):
-                p = self.at_least_one([board[x][y][k] for y in range(plate_height)])
+            for x in range(self.max_width):
+                p = self.at_least_one([plate[x][y][k] for y in range(plate_height)])
                 self.sol.add(And(Implies(xs[x][k], p), Implies(p, xs[x][k])))
 
         if not self.rotation:
             for k in range(self.circuits_num):
                 configurations = []
                 for y in range(plate_height - self.h[k] + 1):
-                    for x in range(self.plate_width - self.w[k] + 1):
-                        configurations.append(self.all_true([board[x+xk][y+yk][k] for yk in range(self.h[k]) for xk in range(self.w[k])]))
-                            
+                    for x in range(self.max_width - self.w[k] + 1):
+                        configurations.append(self.all_true(
+                            [plate[x + xk][y + yk][k] for yk in range(self.h[k]) for xk in range(self.w[k])]))
+
                 self.exactly_one(configurations)
         else:
             rotations = [Bool(f"r_{k}") for k in range(self.circuits_num)]
@@ -79,17 +98,17 @@ class SolverSAT:
                 configurations = []
                 configurations_r = []
                 for y in range(plate_height - min_dim + 1):
-                    for x in range(self.plate_width - min_dim + 1):
+                    for x in range(self.max_width - min_dim + 1):
                         conf1 = []
                         conf2 = []
 
                         for yk in range(self.h[k]):
                             for xk in range(self.w[k]):
-                                if y + self.h[k] <= plate_height and x + self.w[k] <= self.plate_width:
-                                    conf1.append(board[x+xk][y+yk][k])
-                                if y + self.w[k] <= plate_height and x + self.h[k] <= self.plate_width:
-                                    conf2.append(board[x+yk][y+xk][k])
-                        
+                                if y + self.h[k] <= plate_height and x + self.w[k] <= self.max_width:
+                                    conf1.append(plate[x + xk][y + yk][k])
+                                if y + self.w[k] <= plate_height and x + self.h[k] <= self.max_width:
+                                    conf2.append(plate[x + yk][y + xk][k])
+
                         if len(conf1) > 0:
                             configurations.append(self.all_true(conf1))
 
@@ -106,13 +125,13 @@ class SolverSAT:
                 elif len(configurations_r) > 0:
                     self.sol.add(And(self.at_least_one(configurations_r), rotations[k]))
 
-        for x in range(self.plate_width):
+        for x in range(self.max_width):
             for y in range(plate_height):
-                self.sol.add(self.at_most_one([board[x][y][k] for k in range(self.circuits_num)]))
+                self.sol.add(self.at_most_one([plate[x][y][k] for k in range(self.circuits_num)]))
 
         prev = []
-        flat_x = [xs[x][k] for x in range(self.plate_width) for k in range(self.circuits_num)]
-        flat_x_r = [xs[self.plate_width - x - 1][k] for x in range(self.plate_width) for k in range(self.circuits_num)]
+        flat_x = [xs[x][k] for x in range(self.max_width) for k in range(self.circuits_num)]
+        flat_x_r = [xs[self.max_width - x - 1][k] for x in range(self.max_width) for k in range(self.circuits_num)]
         for x in range(len(flat_x)):
             if len(prev) > 0:
                 self.sol.add(Implies(And(prev), Implies(flat_x[x], flat_x_r[x])))
@@ -130,18 +149,18 @@ class SolverSAT:
                 self.sol.add(Implies(flat_x[y], flat_x_r[y]))
 
             prev.append(And(Implies(flat_y[y], flat_y_r[y]), Implies(flat_y_r[y], flat_y[y])))
-        
-        return board, rotations
 
-    def evaluate(self, plate_height, board, rotations):
+        return plate, rotations
+
+    def evaluate(self, plate_height, plate, rotations):
         m = self.sol.model()
 
         circuits_pos = []
         for k in range(self.circuits_num):
             found = False
-            for x in range(self.plate_width):
+            for x in range(self.max_width):
                 for y in range(plate_height):
-                    if not found and m.evaluate(board[x][y][k]):
+                    if not found and m.evaluate(plate[x][y][k]):
                         if not self.rotation:
                             circuits_pos.append((self.w[k], self.h[k], x, y))
                         else:
@@ -152,18 +171,3 @@ class SolverSAT:
                         found = True
 
         return circuits_pos
-        
-if __name__ == "__main__":
-    import sys
-
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    solver_dir = os.path.join(base_dir, "sat")
-    sys.path.append(base_dir)
-    from lib.utils import solve_and_write, parse_arguments
-
-    args = parse_arguments(main=False)
-    solve_and_write(
-        SolverSAT(timeout=args.timeout, rotation=args.rotation), 
-        base_dir, solver_dir, ["res/instances/ins-{0}.txt".format(i) for i in range(41)], 
-        average=args.average, stats=args.stats, plot=args.plot
-    )
