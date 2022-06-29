@@ -155,6 +155,7 @@ class SolverSAT:
         
 if __name__ == "__main__":
     import sys
+
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     solver_dir = os.path.join(base_dir, "sat")
     sys.path.append(base_dir)
