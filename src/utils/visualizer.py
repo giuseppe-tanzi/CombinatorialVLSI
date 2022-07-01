@@ -1,16 +1,16 @@
-from glob import glob
 from openpyxl import Workbook
-from openpyxl.styles import Color, PatternFill, Font, Border, Side, Alignment
-from openpyxl.utils import get_column_letter
-import numpy as np
 import os
+
+import numpy as np
+from openpyxl import Workbook
+from openpyxl.styles import PatternFill, Border, Side, Alignment
+from openpyxl.utils import get_column_letter
 
 # SET THE INSTANCE NUMBER
 instance_number = 5
 
 # INSERT HERE YOUR SOLUTION
 solution = [0, 0, 3, 0, 6, 0, 9, 0, 6, 5, 3, 4, 0, 3, 9, 6]
-
 
 # re-organized solution in e.g. [5, 5, 5, 0, 0, 5, 0, 0] -> [[5, 5], [5, 0], [0, 5], [0, 0]]
 solution = [solution[i: i + 2] for i in range(0, len(solution), 2)]
@@ -36,7 +36,7 @@ thin_border = Border(left=Side(style='thin'),
                      top=Side(style='thin'),
                      bottom=Side(style='thin'))
 
-instance_path = './instances_txt/ins-' + str(instance_number) + '.txt'
+instance_path = '../../data/instances_txt/ins-' + str(instance_number) + '.txt'
 # open the instance file
 with open(instance_path, 'r') as f:
     width = int(f.readline())
@@ -85,7 +85,4 @@ with open(instance_path, 'r') as f:
     if not os.path.exists('../../displayed_solutions'):
         os.mkdir('../../displayed_solutions')
 
-    workbook.save(filename='./displayed_solutions/instance_' + str(instance_number) + ".xlsx")
-
-
-
+    workbook.save(filename='../../displayed_solutions/instance_' + str(instance_number) + ".xlsx")
