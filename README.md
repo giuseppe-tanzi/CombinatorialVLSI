@@ -12,3 +12,6 @@ You have to insert your solution here: <br>
 ![img_2.png](docs/img_2.png) <br>
 And set your instance number: <br>
 ![img_1.png](docs/img_1.png)
+
+## Citazioni
+https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0245267

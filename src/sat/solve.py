@@ -66,13 +66,16 @@ class SATsolver:
         self.sol.add(self.at_least_one(bool_vars))
 
     def set_constraints(self, plate_height):
+        # First model
         plate = [[[Bool(f"b_{i}_{j}_{k}") for k in range(self.circuits_num)] for j in range(plate_height)] for i in
                  range(self.max_width)]
         rotations = None
 
+        # Second model
         xs = [[Bool(f"x_{i}_{j}") for j in range(self.circuits_num)] for i in range(self.max_width)]
         ys = [[Bool(f"y_{i}_{j}") for j in range(self.circuits_num)] for i in range(plate_height)]
 
+        # Channelling constraint
         for k in range(self.circuits_num):
             for y in range(plate_height):
                 p = self.at_least_one([plate[x][y][k] for x in range(self.max_width)])
@@ -126,6 +129,7 @@ class SATsolver:
                 elif len(configurations_r) > 0:
                     self.sol.add(And(self.at_least_one(configurations_r), rotations[k]))
 
+        # Non-overlapping constraint
         for x in range(self.max_width):
             for y in range(plate_height):
                 self.sol.add(self.at_most_one([plate[x][y][k] for k in range(self.circuits_num)]))
