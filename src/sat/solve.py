@@ -33,14 +33,14 @@ class SATsolver:
         self.w, self.h = ([i for i, _ in self.circuits], [j for _, j in self.circuits])
 
         lower_bound = sum([self.h[i] * self.w[i] for i in range(self.circuits_num)]) // self.max_width
-        upper_bound = sum(self.h)
+        upper_bound = sum(self.h) - min(self.h)
 
         start_time = time.time()
         try_timeout = self.timeout
         for plate_height in range(lower_bound, upper_bound + 1):
             self.sol = Solver()
             self.sol.set(timeout=self.timeout * 1000)
-            plate, rotations = self.add_constraints(plate_height)
+            plate, rotations = self.set_constraints(plate_height)
 
             solve_time = time.time()
             if self.sol.check() == sat:
@@ -65,7 +65,7 @@ class SATsolver:
         self.sol.add(self.at_most_one(bool_vars))
         self.sol.add(self.at_least_one(bool_vars))
 
-    def add_constraints(self, plate_height):
+    def set_constraints(self, plate_height):
         plate = [[[Bool(f"b_{i}_{j}_{k}") for k in range(self.circuits_num)] for j in range(plate_height)] for i in
                  range(self.max_width)]
         rotations = None
@@ -84,6 +84,7 @@ class SATsolver:
         if not self.rotation:
             for k in range(self.circuits_num):
                 configurations = []
+                # TODO : si può fare come list comprehension
                 for y in range(plate_height - self.h[k] + 1):
                     for x in range(self.max_width - self.w[k] + 1):
                         configurations.append(self.all_true(
@@ -159,6 +160,8 @@ class SATsolver:
         for k in range(self.circuits_num):
             found = False
             for x in range(self.max_width):
+                if found:
+                    break
                 for y in range(plate_height):
                     if not found and m.evaluate(plate[x][y][k]):
                         if not self.rotation:
@@ -169,5 +172,7 @@ class SATsolver:
                             else:
                                 circuits_pos.append((self.w[k], self.h[k], x, y))
                         found = True
+                    elif found:
+                        break
 
         return circuits_pos
