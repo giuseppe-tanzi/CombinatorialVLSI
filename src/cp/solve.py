@@ -18,7 +18,7 @@ class CPsolver:
         if rotation:
             self.solver_path = ".\\cp\\model_with_rotations.mzn"
         else:
-            self.solver_path = ".\\cp\\model_with_2_arrays.mzn"
+            self.solver_path = ".\\cp\\model.mzn"
 
     def solve(self):
         model = Model(self.solver_path)
@@ -29,7 +29,8 @@ class CPsolver:
             instance["N"] = len(circuits)
             instance["W"] = plate_width
 
-            instance["shapes"] = np.stack(np.array(circuits), 0)
+            instance["widths"] = [x for (x, _) in circuits]
+            instance["heights"] = [y for (_, y) in circuits]
 
             result = instance.solve(timeout=datetime.timedelta(seconds=self.timeout))
 

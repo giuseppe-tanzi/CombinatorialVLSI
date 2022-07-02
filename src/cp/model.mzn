@@ -7,35 +7,36 @@ var min_H..max_H: H;
 
 set of int: CIRCUITS = 1..N;
 
-array[CIRCUITS, 1..2] of int: shapes;  % matrix containing (w,h) of each circuit
+array[CIRCUITS] of int: widths;  % matrix containing (w,h) of each circuit
+array[CIRCUITS] of int: heights;
 
-int: max_X = W - min([shapes[i,1] | i in CIRCUITS]);
-int: max_H = sum([shapes[i,2] | i in CIRCUITS]);
-int: max_Y = max_H - min([shapes[i,2] | i in CIRCUITS]);
-int: min_H = sum([shapes[i,2] * shapes[i,1]| i in CIRCUITS]) div W;
+int: max_X = W - min(widths);
+int: max_H = sum(heights);
+int: max_Y = max_H - min(heights);
+int: min_H = sum([widths[i] * heights[i]| i in CIRCUITS]) div W;
 
 
 array[CIRCUITS] of var 0..max_X: coords_x;
 array[CIRCUITS] of var 0..max_Y: coords_y;
 
-array[CIRCUITS] of int : ordered_c = sort_by(CIRCUITS, [-shapes[i,2]*shapes[i,1] | i in CIRCUITS]);
+array[CIRCUITS] of int : ordered_c = sort_by(CIRCUITS, [-widths[i] * heights[i]| i in CIRCUITS]);
 
 % only the right box can't be bigger than the maximum width W.
-constraint forall(i in CIRCUITS) (W >= coords_x[i] + shapes[i,1]);
+constraint forall(i in CIRCUITS) (W >= coords_x[i] + widths[i]);
 
-constraint forall(i in CIRCUITS) (H >= coords_y[i] + shapes[i,2]);
+constraint forall(i in CIRCUITS) (H >= coords_y[i] + heights[i]);
                  
 % Global constraint for no overlapping circuit.
 constraint diffn(
   coords_x,
   coords_y,
-  [shapes[i,1] | i in CIRCUITS],
-  [shapes[i,2] | i in CIRCUITS]);
+  widths,
+  heights);
   
 % breaking symmetries.
 include "lex_lesseq.mzn"; 
 % MAXIMUM EFFECTIVE WIDTH
-var int: W_E = max([coords_x[i] + shapes[i,1] | i in CIRCUITS]);
+var int: W_E = max([coords_x[i] + widths[i] | i in CIRCUITS]);
 
 %constraint symmetry_breaking_constraint(
 %  lex_lesseq(coords_y, [H - coords_y[i] - shapes[i,2] | i in CIRCUITS])
@@ -53,9 +54,9 @@ constraint symmetry_breaking_constraint(
 );
 
 % Cumulative constraint
-constraint cumulative(coords_y, [shapes[i,2] | i in CIRCUITS], [shapes[i,1] | i in CIRCUITS], W);
+constraint cumulative(coords_y, heights, widths, W);
 
-constraint cumulative(coords_x, [shapes[i,1] | i in CIRCUITS], [shapes[i,2] | i in CIRCUITS], H);
+constraint cumulative(coords_x, widths, heights, H);
 
 
 %solve :: seq_search([

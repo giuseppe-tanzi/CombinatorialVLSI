@@ -7,7 +7,7 @@ from utils.utils import load_data
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-s", "--solver", help="Select a solver between cp, sat, smt and lp", default="sat", type=str)
+    parser.add_argument("-s", "--solver", help="Select a solver between cp, sat, smt and lp", default="cp", type=str)
     parser.add_argument("-n", "--num_instances",
                         help="Select the number of the instance you want to solve, default = 0 solve all",
                         default=0, type=int)
