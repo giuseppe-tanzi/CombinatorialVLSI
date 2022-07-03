@@ -2,9 +2,18 @@ from glob import glob
 import os
 
 
-def write_solution(n, solution, stat):
+def write_solution(output_dir, n, solution, stat):
     # TODO : Scrivere la parte di salvataggio su file di questi risultati.
     print(solution, stat)
+    os.makedirs(output_dir, exist_ok=True)
+    filename = os.path.join(output_dir, f"ins_{n}.txt")
+    with open(filename, 'w') as sol:
+        (plate_width, plate_height), circuits_pos = solution
+        sol.write("{0} {1}\n".format(plate_width, plate_height))
+        sol.write("{0}\n".format(len(circuits_pos)))
+        for c in circuits_pos:
+            w, h, x, y = c
+            sol.write("{0} {1} {2} {3}\n".format(w, h, x, y))
 
 
 def load_instance(filename):
