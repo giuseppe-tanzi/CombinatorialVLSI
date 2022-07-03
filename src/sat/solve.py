@@ -24,7 +24,9 @@ class SATsolver:
         for d in self.data:
             solution = self.solve_instance(d)
             ins_num = d[0]
-            write_solution(ins_num, solution[0], solution[1])
+            # write_solution(ins_num, solution[0], solution[1])
+            print(solution)
+        return None
 
     def solve_instance(self, instance):
         _, self.max_width, self.circuits = instance
