@@ -42,9 +42,9 @@ var int: W_E = max([coords_x[i] + widths[i] | i in CIRCUITS]);
 %  lex_lesseq(coords_y, [H - coords_y[i] - shapes[i,2] | i in CIRCUITS])
 %);
 
-%constraint symmetry_breaking_constraint(
-%  lex_lesseq(coords_x, [W_E - coords_x[i] - shapes[i,1] | i in CIRCUITS])
-%);
+constraint symmetry_breaking_constraint(
+  lex_lesseq(coords_x, [W_E - coords_x[i] - widths[i] | i in CIRCUITS])
+);
 
 % The biggest circuit is always placed under and on the left wrt the second biggest
 constraint symmetry_breaking_constraint(
