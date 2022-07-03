@@ -27,12 +27,14 @@ def load_instance(filename):
         return num_ins, width, circuits
 
 
-def load_data(num_instances, input_dir):
+def load_data(num_instance, input_dir):
     """Return an array containing the instances with the relative instance number
     e.g. [1, plate_width, circuits] where circuits is the array of shapes and 1 indicates the first instance"""
     all_instances = glob(os.path.join(input_dir, "*"))
-    if num_instances == 0:
-        return [load_instance(filename=instance_filename) for instance_filename in all_instances]
+    if num_instance == 0:
+        istances = [load_instance(filename=instance_filename) for instance_filename in all_instances]
+        istances.sort(key=lambda x: int(x[0]))
+        return istances
     else:
         return [load_instance(filename=filename) for filename in all_instances if
-                int(filename[filename.find("ins-") + 4:filename.find(".txt")]) == num_instances]
+                int(filename[filename.find("ins-") + 4:filename.find(".txt")]) == num_instance]

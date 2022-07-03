@@ -49,7 +49,7 @@ class CPsolver:
                 write_solution(self.output_dir, ins_num, ((plate_width, plate_height), circuits_pos),
                                result.statistics['time'].total_seconds())
 
-                solutions.append(ins_num, ((plate_width, plate_height), circuits_pos),
-                               result.statistics['time'].total_seconds())
+                solutions.append((ins_num, ((plate_width, plate_height), circuits_pos),
+                               result.statistics['time'].total_seconds()))
 
         return solutions
