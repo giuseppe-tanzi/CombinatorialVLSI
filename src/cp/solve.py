@@ -23,6 +23,9 @@ class CPsolver:
     def solve(self):
         model = Model(self.solver_path)
         or_tools = Solver.lookup("com.google.or-tools")
+
+        solutions = []
+
         for d in self.data:
             ins_num, plate_width, circuits = d
             instance = Instance(or_tools, model)
@@ -44,4 +47,9 @@ class CPsolver:
                 plate_height = result.objective
 
                 write_solution(self.output_dir, ins_num, ((plate_width, plate_height), circuits_pos),
-                               result.statistics['time'])
+                               result.statistics['time'].total_seconds())
+
+                solutions.append(ins_num, ((plate_width, plate_height), circuits_pos),
+                               result.statistics['time'].total_seconds())
+
+        return solutions

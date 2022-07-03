@@ -41,10 +41,14 @@ def main():
         raise argparse.ArgumentError("Please select a solver between cp, sat, smt and lp.")
 
     print("Solving with", args.solver)
-    solver.solve()
+    solutions = solver.solve()
 
     if args.visualize:
         # TODO : visualization
+        pass
+
+    if args.report:
+        # TODO : create the report
         pass
 
 
