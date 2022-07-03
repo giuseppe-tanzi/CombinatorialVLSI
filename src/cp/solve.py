@@ -22,17 +22,17 @@ class CPsolver:
 
     def solve(self):
         model = Model(self.solver_path)
-        gecode = Solver.lookup("gecode")
+        or_tools = Solver.lookup("com.google.or-tools")
         for d in self.data:
             ins_num, plate_width, circuits = d
-            instance = Instance(gecode, model)
+            instance = Instance(or_tools, model)
             instance["N"] = len(circuits)
             instance["W"] = plate_width
 
             instance["widths"] = [x for (x, _) in circuits]
             instance["heights"] = [y for (_, y) in circuits]
 
-            result = instance.solve(timeout=datetime.timedelta(seconds=self.timeout))
+            result = instance.solve(timeout=datetime.timedelta(seconds=self.timeout), processes=4)
 
             if result.status is Status.OPTIMAL_SOLUTION:
                 if self.rotation:
@@ -43,5 +43,5 @@ class CPsolver:
                                     zip(circuits, result["coords_x"], result["coords_y"])]
                 plate_height = result.objective
 
-                write_solution(ins_num, ((plate_width, plate_height), circuits_pos),
-                               result.statistics['time'].total_seconds())
+                write_solution(self.output_dir, ins_num, ((plate_width, plate_height), circuits_pos),
+                               result.statistics['time'])
