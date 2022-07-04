@@ -1,8 +1,9 @@
 import argparse
 
 from cp.solve import CPsolver
-from sat.solve import SATsolver
 from lp.solve import LPsolver
+from sat.solve import SATsolver
+from smt.solve import SMTsolver
 from utils.utils import load_data
 
 
@@ -34,8 +35,7 @@ def main():
     elif args.solver == "sat":
         solver = SATsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
     elif args.solver == "smt":
-        pass
-        # solver = SMTsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
+        solver = SMTsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
     elif args.solver == "lp":
         solver = LPsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
     else:
@@ -48,9 +48,10 @@ def main():
         # TODO : visualization
         pass
 
-    if args.report:
+
+"""    if args.report:
         # TODO : create the report
-        pass
+        pass"""
 
 
 if __name__ == '__main__':
