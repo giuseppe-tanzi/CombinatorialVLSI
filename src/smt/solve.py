@@ -1,6 +1,6 @@
 import time
 
-from z3 import And, Or, sat, Solver, Sum, If, IntVector
+from z3 import And, Or, sat, Solver, Sum, If, IntVector, Implies
 
 
 class SMTsolver:
@@ -24,9 +24,9 @@ class SMTsolver:
 
     def solve(self):
         for d in self.data:
-            solution = self.solve_instance(d)
             ins_num = d[0]
             print(f"Instance num: {ins_num}")
+            solution = self.solve_instance(d)
             # write_solution(ins_num, solution[0], solution[1])
             print(solution)
         return None
@@ -47,20 +47,21 @@ class SMTsolver:
         lower_bound = sum([self.h[i] * self.w[i] for i in range(self.circuits_num)]) // self.max_width
         upper_bound = sum(self.h) - min(self.h)
 
-        start_time = time.time()
-        try_timeout = self.timeout
         for plate_height in range(lower_bound, upper_bound + 1):
             self.sol = Solver()
             self.sol.set(timeout=self.timeout * 1000)
             #            plate, rotations = self.set_constraints(plate_height)
+
+            constraints_time = time.time()
             self.set_constraints(plate_height)
+            print(f"Time instantiation: {time.time() - constraints_time}")
 
             solve_time = time.time()
             if self.sol.check() == sat:
                 circuits_pos = self.evaluate()
                 return ((self.max_width, plate_height), circuits_pos), (time.time() - solve_time)
             else:
-                try_timeout = round((self.timeout - (time.time() - start_time)))
+                try_timeout = round((self.timeout - (time.time() - constraints_time)))
                 if try_timeout < 0:
                     return None, 0
         return None, 0
@@ -69,6 +70,16 @@ class SMTsolver:
 
         self.x_positions = IntVector('x_pos', self.circuits_num)
         self.y_positions = IntVector('y_pos', self.circuits_num)
+
+        w, h = self.w, self.h  # actual widths and heights if rotation allowed
+
+        # Handling rotation
+        if self.rotation:
+            for i in range(self.circuits_num):
+                # if rotation allowed and a circuit is square  (width=height) then force it to be not rotated
+                self.sol.add(If(w[i] == h[i], And(w[i] == self.w[i], h[i] == self.h[i]),
+                                Or(And(w[i] == self.w[i], h[i] == self.h[i]),
+                                   And(w[i] == self.h[i], h[i] == self.w[i]))))
 
         # CONSTRAINTS
 
@@ -82,20 +93,37 @@ class SMTsolver:
         # DO NOT OVERLAP
         for i in range(1, self.circuits_num):
             for j in range(0, i):
-                self.sol.add(Or(self.y_positions[i] + self.h[i] <= self.y_positions[j],
-                                self.y_positions[j] + self.h[j] <= self.y_positions[i],
-                                self.x_positions[i] + self.w[i] <= self.x_positions[j],
-                                self.x_positions[j] + self.w[j] <= self.x_positions[i]))
+                self.sol.add(Or(Sum(self.y_positions[i], self.h[i]) <= self.y_positions[j],
+                                Sum(self.y_positions[j], self.h[j]) <= self.y_positions[i],
+                                Sum(self.x_positions[i], self.w[i]) <= self.x_positions[j],
+                                Sum(self.x_positions[j], self.w[j]) <= self.x_positions[i]))
+
+                # Two rectangles with same dimensions
+                self.sol.add(Implies(And(self.w[i] == self.w[j], self.h[i] == self.h[j]),
+                                     Or(self.x_positions[j] > self.x_positions[i],
+                                        And(self.x_positions[j] == self.x_positions[i],
+                                            self.y_positions[j] >= self.y_positions[i]))))
+
+                # If two rectangles cannot be packed side to side along the x axis
+                self.sol.add(Implies(Sum(self.w[i], self.w[j]) > self.max_width,
+                                     Or(Sum(self.y_positions[i], self.h[i]) <= self.y_positions[j],
+                                        Sum(self.y_positions[j], self.h[j]) <= self.y_positions[i])))
+
+                # If two rectangles cannot be packed one over the other along the y axis
+                self.sol.add(Implies(Sum(self.h[i], self.h[j]) > plate_height,
+                                     Or(Sum(self.x_positions[i], self.w[i]) <= self.x_positions[j],
+                                        Sum(self.x_positions[j],
+                                            self.w[j]) <= self.x_positions[i])))
 
         # SUM OVER ROWS (CUMULATIVE)
         for u in range(plate_height):
             self.sol.add(
-                self.max_width >= Sum([If(And(self.y_positions[i] <= u, u < self.y_positions[i] + self.h[i]),
+                self.max_width >= Sum([If(And(self.y_positions[i] <= u, u < Sum(self.y_positions[i], self.h[i])),
                                           self.w[i], 0) for i in range(self.circuits_num)]))
 
         # SUM OVER COLUMNS (CUMULATIVE)
         for u in range(self.max_width):
-            self.sol.add(plate_height >= Sum([If(And(self.x_positions[i] <= u, u < self.x_positions[i] + self.w[i]),
+            self.sol.add(plate_height >= Sum([If(And(self.x_positions[i] <= u, u < Sum(self.x_positions[i], self.w[i])),
                                                  self.h[i], 0) for i in range(self.circuits_num)]))
 
     def evaluate(self):
