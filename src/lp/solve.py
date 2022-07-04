@@ -2,7 +2,7 @@ from utils.utils import write_solution
 import gurobipy as gp
 import time
 import numpy as np
-
+import timeout_decorator
 
 class LPsolver:
 
@@ -15,11 +15,15 @@ class LPsolver:
         self.timeout = timeout
 
     def solve(self):
+        solutions = []
         for d in self.data:
             solution = self.solve_instance(d)
             ins_num = d[0]
+            solutions.append(solution)
             # write_solution(ins_num, solution[0], solution[1])
+        return solutions
 
+    # @timeout_decorator.timeout(300, use_signals=False)
     def solve_instance(self, instance):
         _, self.max_width, self.circuits = instance
         self.circuits_num = len(self.circuits)
@@ -40,13 +44,16 @@ class LPsolver:
                         val_pos.append(create_binary_encoding)
             return val_pos
 
-        for max_h in range(lower_bound - 1, upper_bound + 1):
+        for max_h in range(lower_bound, upper_bound + 1):
 
             # creating the tensor which contains, for each circuit, all its possible valid positions
             C = [valid_positions(widths[i], heights[i], self.max_width, max_h) for i in range(self.circuits_num)]
 
             # creating the model
             model = gp.Model()
+
+            model.Params.TimeLimit = 50
+            model.Params.Threads = 8
 
             # X contiene, per ogni circuito, un numero di liste pari al numero di posizioni valide che il circuito
             # può ricoprire nella plate di dimensioni max_width * current_h (lower_bound)

@@ -42,11 +42,11 @@ class SATsolver:
         for plate_height in range(lower_bound, upper_bound + 1):
             self.sol = Solver()
             self.sol.set(timeout=self.timeout * 1000)
-            plate, rotations = self.set_constraints(plate_height)
+            px, py = self.set_constraints(plate_height)
 
             solve_time = time.time()
             if self.sol.check() == sat:
-                circuits_pos = self.evaluate(plate_height, plate, rotations)
+                circuits_pos = self.evaluate(plate_height, px, py)
                 return ((self.max_width, plate_height), circuits_pos), (time.time() - solve_time)
             else:
                 try_timeout = round((self.timeout - (time.time() - start_time)))
@@ -57,9 +57,6 @@ class SATsolver:
     def all_true(self, bool_vars):
         return And(bool_vars)
 
-    def at_least_one(self, bool_vars):
-        return Or(bool_vars)
-
     def at_most_one(self, bool_vars):
         return [Not(And(pair[0], pair[1])) for pair in combinations(bool_vars, 2)]
 
@@ -68,117 +65,107 @@ class SATsolver:
         self.sol.add(self.at_least_one(bool_vars))
 
     def set_constraints(self, plate_height):
-        # First model
-        plate = [[[Bool(f"b_{i}_{j}_{k}") for k in range(self.circuits_num)] for j in range(plate_height)] for i in
-                 range(self.max_width)]
-        rotations = None
+        plate_height = 4
+        # Variables
+        px = [[Bool(f"px_{i + 1}_{j}") for j in range(self.max_width - self.w[i] + 1)] for i in range(self.circuits_num)]
+        py = [[Bool(f"py_{i + 1}_{j}") for j in range(plate_height - self.h[i] + 1)] for i in range(self.circuits_num)]
 
-        # Second model
-        xs = [[Bool(f"x_{i}_{j}") for j in range(self.circuits_num)] for i in range(self.max_width)]
-        ys = [[Bool(f"y_{i}_{j}") for j in range(self.circuits_num)] for i in range(plate_height)]
+        lr = [[Bool(f"lr_{i + 1}_{j + 1}") for j in range(self.circuits_num) if i != j] for i in
+              range(self.circuits_num)]
+        ud = [[Bool(f"ud_{i + 1}_{j + 1}") for j in range(self.circuits_num) if i != j] for i in
+              range(self.circuits_num)]
 
-        # Channelling constraint
-        for k in range(self.circuits_num):
-            for y in range(plate_height):
-                p = self.at_least_one([plate[x][y][k] for x in range(self.max_width)])
-                self.sol.add(And(Implies(ys[y][k], p), Implies(p, ys[y][k])))
-            for x in range(self.max_width):
-                p = self.at_least_one([plate[x][y][k] for y in range(plate_height)])
-                self.sol.add(And(Implies(xs[x][k], p), Implies(p, xs[x][k])))
+        print("Px \n", px)
+        print("Py \n", py)
+        print("Lr \n", lr)
+        print("Ud \n", ud)
 
-        if not self.rotation:
-            for k in range(self.circuits_num):
-                configurations = []
-                # TODO : si può fare come list comprehension
-                for y in range(plate_height - self.h[k] + 1):
-                    for x in range(self.max_width - self.w[k] + 1):
-                        configurations.append(self.all_true(
-                            [plate[x + xk][y + yk][k] for yk in range(self.h[k]) for xk in range(self.w[k])]))
+        # Place a circuit one time
+        for x in px:
+            self.sol.add(Or([i for i in x]))
 
-                self.exactly_one(configurations)
-        else:
-            rotations = [Bool(f"r_{k}") for k in range(self.circuits_num)]
-            for k in range(self.circuits_num):
-                min_dim = min(self.h[k], self.w[k])
+        for y in py:
+            self.sol.add(Or([i for i in y]))
 
-                configurations = []
-                configurations_r = []
-                for y in range(plate_height - min_dim + 1):
-                    for x in range(self.max_width - min_dim + 1):
-                        conf1 = []
-                        conf2 = []
+        # Order constraint
+        for i in range(self.circuits_num):
+            for j in range(self.max_width - self.w[i]):
+                self.sol.add(Or([Not(px[i][j]), px[i][j + 1]]))
+            for j in range(plate_height - self.h[i]):
+                self.sol.add(Or([Not(py[i][j]), py[i][j + 1]]))
 
-                        for yk in range(self.h[k]):
-                            for xk in range(self.w[k]):
-                                if y + self.h[k] <= plate_height and x + self.w[k] <= self.max_width:
-                                    conf1.append(plate[x + xk][y + yk][k])
-                                if y + self.w[k] <= plate_height and x + self.h[k] <= self.max_width:
-                                    conf2.append(plate[x + yk][y + xk][k])
+        # Non overlapping
+        for i in range(0, self.circuits_num):
+            for j in range(i, self.circuits_num - 1):
+                self.sol.add(Or([lr[i][j], lr[j + 1][i], ud[i][j], ud[j + 1][i]]))
+                print()
+                print(Or([lr[i][j], lr[j + 1][i], ud[i][j], ud[j + 1][i]]))
+                for e in range(self.max_width - self.w[i]):
+                    print(e)
+                    self.sol.add(Or([Not(lr[i][j]), px[i][e], Not(px[j + 1][e + self.w[i]])]))
+                    print(Or([Not(lr[i][j]), px[i][e], Not(px[j + 1][e + self.w[i]])]))
+                    self.sol.add(Or([Not(lr[j + 1][i]), px[j + 1][e], Not(px[i][e + self.w[j + 1]])]))
+                    print(Or([Not(lr[j + 1][i]), px[j + 1][e], Not(px[i][e + self.w[j + 1]])]))
+                for f in range(plate_height - self.h[j + 1]):
+                    self.sol.add(Or([Not(ud[i][j]), py[i][f], Not(py[j + 1][f + self.h[i]])]))
+                    self.sol.add(Or([Not(ud[j + 1][i]), py[j + 1][f], Not(py[i][f + self.h[j + 1]])]))
+        # def indomain(box_size, rect_size):
+        #     return box_size - rect_size >= 0
 
-                        if len(conf1) > 0:
-                            configurations.append(self.all_true(conf1))
+        # for i in range(self.circuits_num):
+        #     for j in range(self.circuits_num):
+        #         if i < j:
+        #             # domain constraint for px and py in relation to lr and ud
+        #             if indomain(len(px[j]) - 1, self.w[i] - 1):
+        #                 self.sol.add(Or(Not(lr[i][j]), Not(px[j][self.w[i] - 1])))
+        #                 print(Or(Not(lr[i][j]), Not(px[j][self.w[i] - 1])))
+        #             else:
+        #                 self.sol.add(Or(Not(lr[i][j]), Not(px[j][len(px[j]) - 1])))
+        #             if indomain(len(px[i]) - 1, self.w[j] - 1):
+        #                 self.sol.add(Or(Not(lr[j][i]), Not(px[i][self.w[j] - 1])))
+        #             else:
+        #                 self.sol.add(Or(Not(lr[j][i]), Not(px[i][len(px[i]) - 1])))
+        #             if indomain(len(py[j]) - 1, self.h[i] - 1):
+        #                 self.sol.add(Or(Not(ud[i][j]), Not(py[j][self.h[i] - 1])))
+        #             else:
+        #                 self.sol.add(Or(Not(ud[i][j]), Not(py[j][len(py[j]) - 1])))
+        #             if indomain(len(py[i]) - 1, self.h[j] - 1):
+        #                 self.sol.add(Or(Not(ud[j][i]), Not(py[i][self.h[j] - 1])))
+        #             else:
+        #                 self.sol.add(Or(Not(ud[j][i]), Not(py[i][len(py[i]) - 1])))
+        return px, py
 
-                        if len(conf2) > 0:
-                            configurations_r.append(self.all_true(conf2))
-
-                if len(configurations) > 0 and len(configurations_r) > 0:
-                    self.exactly_one([
-                        And(self.at_least_one(configurations), Not(rotations[k])),
-                        And(self.at_least_one(configurations_r), rotations[k])
-                    ])
-                elif len(configurations) > 0:
-                    self.sol.add(And(self.at_least_one(configurations), Not(rotations[k])))
-                elif len(configurations_r) > 0:
-                    self.sol.add(And(self.at_least_one(configurations_r), rotations[k]))
-
-        # Non-overlapping constraint
-        for x in range(self.max_width):
-            for y in range(plate_height):
-                self.sol.add(self.at_most_one([plate[x][y][k] for k in range(self.circuits_num)]))
-
-        prev = []
-        flat_x = [xs[x][k] for x in range(self.max_width) for k in range(self.circuits_num)]
-        flat_x_r = [xs[self.max_width - x - 1][k] for x in range(self.max_width) for k in range(self.circuits_num)]
-        for x in range(len(flat_x)):
-            if len(prev) > 0:
-                self.sol.add(Implies(And(prev), Implies(flat_x[x], flat_x_r[x])))
-            else:
-                self.sol.add(Implies(flat_x[x], flat_x_r[x]))
-            prev.append(And(Implies(flat_x[x], flat_x_r[x]), Implies(flat_x_r[x], flat_x[x])))
-
-        prev = []
-        flat_y = [ys[y][k] for y in range(plate_height) for k in range(self.circuits_num)]
-        flat_y_r = [ys[plate_height - y - 1][k] for y in range(plate_height) for k in range(self.circuits_num)]
-        for y in range(len(flat_y)):
-            if len(prev) > 0:
-                self.sol.add(Implies(And(prev), Implies(flat_y[y], flat_y_r[y])))
-            else:
-                self.sol.add(Implies(flat_x[y], flat_x_r[y]))
-
-            prev.append(And(Implies(flat_y[y], flat_y_r[y]), Implies(flat_y_r[y], flat_y[y])))
-
-        return plate, rotations
-
-    def evaluate(self, plate_height, plate, rotations):
+    def evaluate(self, plate_height, px, py):
         m = self.sol.model()
 
         circuits_pos = []
-        for k in range(self.circuits_num):
-            found = False
-            for x in range(self.max_width):
-                if found:
-                    break
-                for y in range(plate_height):
-                    if not found and m.evaluate(plate[x][y][k]):
-                        if not self.rotation:
-                            circuits_pos.append((self.w[k], self.h[k], x, y))
-                        else:
-                            if m.evaluate(rotations[k]):
-                                circuits_pos.append((self.h[k], self.w[k], x, y))
-                            else:
-                                circuits_pos.append((self.w[k], self.h[k], x, y))
-                        found = True
-                    elif found:
-                        break
+        X = []
+        Y = []
+        for i in range(self.circuits_num):
+            for e in range(len(px[i])):
+                print(px[i][e], m.evaluate(px[i][e]))
+                if str(m.evaluate(px[i][e])) == 'True': X.append(e); break
+            for f in range(len(py[i])):
+                print(py[i][f], m.evaluate(py[i][f]))
+                if str(m.evaluate(py[i][f])) == 'True': Y.append(f); break
+        print(X)
+        print(Y)
+        # for k in range(self.circuits_num):
+        #     found = False
+        #     for x in range(self.max_width):
+        #         if found:
+        #             break
+        #         for y in range(plate_height):
+        #             if not found and m.evaluate(plate[x][y][k]):
+        #                 if not self.rotation:
+        #                     circuits_pos.append((self.w[k], self.h[k], x, y))
+        #                 else:
+        #                     if m.evaluate(rotations[k]):
+        #                         circuits_pos.append((self.h[k], self.w[k], x, y))
+        #                     else:
+        #                         circuits_pos.append((self.w[k], self.h[k], x, y))
+        #                 found = True
+        #             elif found:
+        #                 break
 
         return circuits_pos

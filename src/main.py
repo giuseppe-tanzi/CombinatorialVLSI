@@ -22,6 +22,7 @@ def main():
                         default=False, type=bool)
     parser.add_argument("-v", "--visualize", help="Enable solution visualization", default=False, type=bool)
     parser.add_argument("-t", "--timeout", help="Timeout in seconds", default=300)
+    parser.add_argument("-p", "--report", help="Make the report", default=False)
     args = parser.parse_args()
     print(args)
 
