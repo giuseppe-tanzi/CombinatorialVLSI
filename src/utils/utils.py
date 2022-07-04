@@ -1,5 +1,6 @@
 from glob import glob
 import os
+import matplotlib.pyplot as plt
 
 
 def write_solution(output_dir, n, solution, stat):
@@ -38,3 +39,21 @@ def load_data(num_instance, input_dir):
     else:
         return [load_instance(filename=filename) for filename in all_instances if
                 int(filename[filename.find("ins-") + 4:filename.find(".txt")]) == num_instance]
+
+def display_solution(title, sizes_plate, n_circuits, sizes_circuits, pos_circuits):
+    fig, ax = plt.subplots()
+    cmap = plt.cm.get_cmap('hsv', n_circuits)
+    ax = plt.gca()
+    plt.title(title)
+    if len(pos_circuits) > 0:
+        for i in range(n_circuits):
+            rect = plt.Rectangle(pos_circuits[i], *sizes_circuits[i], edgecolor="#333", facecolor=cmap(i))
+            ax.add_patch(rect)
+    ax.set_xlim(0, sizes_plate[0])
+    ax.set_ylim(0, sizes_plate[1] + 1)
+    ax.set_xticks(range(sizes_plate[0] + 1))
+    ax.set_yticks(range(sizes_plate[1] + 1))
+    ax.set_xlabel('width_plate')
+    ax.set_ylabel('height_plate')
+
+    plt.show()

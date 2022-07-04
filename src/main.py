@@ -1,10 +1,9 @@
 import argparse
 
 from cp.solve import CPsolver
-from lp.solve import LPsolver
 from sat.solve import SATsolver
-from smt.solve import SMTsolver
-from utils.utils import load_data
+from lp.solve_ortools import LPsolver
+from utils.utils import load_data, display_solution
 
 
 def main():
@@ -35,7 +34,8 @@ def main():
     elif args.solver == "sat":
         solver = SATsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
     elif args.solver == "smt":
-        solver = SMTsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
+        pass
+        # solver = SMTsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
     elif args.solver == "lp":
         solver = LPsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
     else:
@@ -45,13 +45,14 @@ def main():
     solutions = solver.solve()
 
     if args.visualize:
-        # TODO : visualization
-        pass
-
-
-"""    if args.report:
+        for sol in solutions:
+            print(sol[1][1])
+            circuits = [(w, h) for (w, h, _, _) in sol[1][1]]
+            circuits_pos = [(x, y) for (_, _, x, y) in sol[1][1]]
+            display_solution(f'ins-{sol[0]}', (sol[1][0][0], sol[1][0][1]), len(sol[1][1]), circuits, circuits_pos)
+    if args.report:
         # TODO : create the report
-        pass"""
+        pass
 
 
 if __name__ == '__main__':

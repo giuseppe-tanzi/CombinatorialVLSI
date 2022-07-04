@@ -35,21 +35,21 @@ class CPsolver:
             instance["widths"] = [x for (x, _) in circuits]
             instance["heights"] = [y for (_, y) in circuits]
 
-            result = instance.solve(timeout=datetime.timedelta(seconds=self.timeout), processes=4)
+            result = instance.solve(timeout=datetime.timedelta(seconds=self.timeout), processes=8)
 
             if result.status is Status.OPTIMAL_SOLUTION:
                 if self.rotation:
                     circuits_pos = [(w, h, x, y) if not r else (h, w, x, y) for (w, h), x, y, r in
-                                    zip(circuits, result["x"], result["y"], result["r"])]
+                                    zip(circuits, result["coords_x"], result["coords_y"], result["rotation"])]
                 else:
                     circuits_pos = [(w, h, x, y) for (w, h), x, y in
                                     zip(circuits, result["coords_x"], result["coords_y"])]
                 plate_height = result.objective
 
                 write_solution(self.output_dir, ins_num, ((plate_width, plate_height), circuits_pos),
-                               result.statistics['time'].total_seconds())
+                               result.statistics['time'] / 1000)
 
                 solutions.append((ins_num, ((plate_width, plate_height), circuits_pos),
-                               result.statistics['time'].total_seconds()))
+                                  result.statistics['time'] / 1000))
 
         return solutions

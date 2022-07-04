@@ -1,6 +1,7 @@
 from utils.utils import write_solution
-import gurobipy as gp
+from ortools.linear_solver import pywraplp
 import time
+import multiprocessing
 import numpy as np
 
 class LPsolver:
@@ -12,18 +13,31 @@ class LPsolver:
             output_dir = "../data/output_lp/"
         self.output_dir = output_dir
         self.timeout = timeout
+        self.ins_num = None
 
     def solve(self):
         solutions = []
         for d in self.data:
             solution = self.solve_instance(d)
-            ins_num = d[0]
+            self.ins_num = d[0]
             solutions.append(solution)
             # write_solution(ins_num, solution[0], solution[1])
         return solutions
 
+    def valid_positions(self, c_w, c_h, max_width, max_h):
+        val_pos = []
+        for i in range(max_width):
+            for j in range(max_h):
+                if i + c_w <= max_width and j + c_h <= max_h:
+                    create_binary_encoding = np.zeros(max_h * max_width)
+                    for k in range(j, j + c_h):
+                        create_binary_encoding[k * max_width + i: k * max_width + i + c_w] = 1
+                    val_pos.append(create_binary_encoding)
+        return val_pos
+
     # @timeout_decorator.timeout(300, use_signals=False)
     def solve_instance(self, instance):
+        start = time.time()
         _, self.max_width, self.circuits = instance
         self.circuits_num = len(self.circuits)
 
@@ -32,60 +46,52 @@ class LPsolver:
         lower_bound = sum([heights[i] * widths[i] for i in range(self.circuits_num)]) // self.max_width
         upper_bound = sum(heights) - min(heights)
 
-        def valid_positions(c_w, c_h, max_width, max_h):
-            val_pos = []
-            for i in range(max_width):
-                for j in range(max_h):
-                    if i + c_w <= max_width and j + c_h <= max_h:
-                        create_binary_encoding = np.zeros(max_h * max_width)
-                        for k in range(j, j + c_h):
-                            create_binary_encoding[k * max_width + i: k * max_width + i + c_w] = 1
-                        val_pos.append(create_binary_encoding)
-            return val_pos
-
         for max_h in range(lower_bound, upper_bound + 1):
 
             # creating the tensor which contains, for each circuit, all its possible valid positions
-            C = [valid_positions(widths[i], heights[i], self.max_width, max_h) for i in range(self.circuits_num)]
+            C = [self.valid_positions(widths[i], heights[i], self.max_width, max_h) for i in range(self.circuits_num)]
 
             # creating the model
-            model = gp.Model()
-
-            model.Params.TimeLimit = 50
-            model.Params.Threads = 8
+            solver = pywraplp.Solver.CreateSolver('SCIP')
+            solver.SetTimeLimit(self.timeout*1000)
+            # solver.SetNumThreads(8)
 
             # X contiene, per ogni circuito, un numero di liste pari al numero di posizioni valide che il circuito
             # può ricoprire nella plate di dimensioni max_width * current_h (lower_bound)
             X = []
+            start_2 = time.time()
             for i in range(self.circuits_num):
-                X.append([model.addVar(vtype='I', name=f'x_{i}_{j}', lb=0, ub=1) for j in range(len(C[i]))])
+                X.append([solver.IntVar(lb=0, ub=1, name=f'x_{i}_{j}') for j in range(len(C[i]))])
+            print('First cycle time: ', time.time() - start_2)
 
             # no overlapping
             # ogni posizione p sulla plate non deve essere occupata da più di 1 circuito
+            start_3 = time.time()
             for p in range(np.array(C[0]).shape[1]):
-                model.addConstr(
-                    sum([C[i][j][p] * X[i][j] for i in range(self.circuits_num) for j in range(len(C[i]))]) <= 1)
+                solver.Add(sum([C[i][j][p] * X[i][j] for i in range(self.circuits_num) for j in range(len(C[i]))]) <= 1)
+            print('Second cycle time: ', time.time() - start_3)
 
             # ogni circuito deve essere piazzato esattamente una volta
+            start_4 = time.time()
             for i in range(self.circuits_num):
-                model.addConstr(sum([X[i][j] for j in range(len(C[i]))]) == 1)
+                solver.Add(sum([X[i][j] for j in range(len(C[i]))]) == 1)
+            print('Third cycle time: ', time.time() - start_4)
 
-            model.optimize()
+            print('Instantiation time: ', (time.time() - start))
+            status = solver.Solve()
+            total_time = solver.WallTime()/1000
+            print('Total time elapsed: ', total_time)
 
-            try:
+            if status == pywraplp.Solver.OPTIMAL:
                 self.print_solution(C, X, max_h)
+                # return (self.ins_num, ((self.max_width, max_h), circuit_pos), total_time)
                 break
-            except:
-                pass
 
     def print_solution(self, C, X, max_h):
-        # this first line is used only to make the print fail early in case there's no solution for the current h.
-        X[0][0].X
         representation = np.zeros((self.max_width, max_h))
         for i in range(self.circuits_num):
             for j in range(len(C[i])):
-                if X[i][j].X > 0:
-                    print(X[i][j].X)
+                if X[i][j].solution_value() > 0:
                     representation += np.array(C[i][j]).reshape((self.max_width, max_h))
         print("H :", max_h)
         print(representation)
