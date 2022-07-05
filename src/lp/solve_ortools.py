@@ -18,8 +18,8 @@ class LPsolver:
     def solve(self):
         solutions = []
         for d in self.data:
-            solution = self.solve_instance(d)
             self.ins_num = d[0]
+            solution = self.solve_instance(d)
             solutions.append(solution)
             # write_solution(ins_num, solution[0], solution[1])
         return solutions
@@ -54,6 +54,7 @@ class LPsolver:
             # creating the model
             solver = pywraplp.Solver.CreateSolver('SCIP')
             solver.SetTimeLimit(self.timeout*1000)
+            solver.EnableOutput()
             # solver.SetNumThreads(8)
 
             # X contiene, per ogni circuito, un numero di liste pari al numero di posizioni valide che il circuito
@@ -90,7 +91,8 @@ class LPsolver:
                             indexes = np.where((np.array(C[i][j]).reshape((self.max_width, max_h))) == 1)
                     circuit_pos.append((widths[i], heights[i], indexes[1][0], indexes[0][0]))
 
-                self.print_solution(C, X, max_h)
+                # self.print_solution(C, X, max_h)
+                write_solution(self.output_dir, self.ins_num, ((self.max_width, max_h), circuit_pos), total_time)
                 return self.ins_num, ((self.max_width, max_h), circuit_pos), total_time
 
     def print_solution(self, C, X, max_h):
