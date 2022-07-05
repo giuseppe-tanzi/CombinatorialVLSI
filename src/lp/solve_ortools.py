@@ -67,6 +67,7 @@ class LPsolver:
             # no overlapping
             # ogni posizione p sulla plate non deve essere occupata da più di 1 circuito
             start_3 = time.time()
+            print('Number of constraints: ', np.array(C[0]).shape[1])
             for p in range(np.array(C[0]).shape[1]):
                 solver.Add(sum([C[i][j][p] * X[i][j] for i in range(self.circuits_num) for j in range(len(C[i]))]) <= 1)
             print('Second cycle time: ', time.time() - start_3)

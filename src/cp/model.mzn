@@ -39,7 +39,7 @@ include "lex_lesseq.mzn";
 var int: W_E = max([coords_x[i] + widths[i] | i in CIRCUITS]);
 
 %constraint symmetry_breaking_constraint(
-%  lex_lesseq(coords_y, [H - coords_y[i] - shapes[i,2] | i in CIRCUITS])
+%  lex_lesseq(coords_y, [H - coords_y[i] - heights[i] | i in CIRCUITS])
 %);
 
 constraint symmetry_breaking_constraint(

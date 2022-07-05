@@ -56,9 +56,10 @@ constraint symmetry_breaking_constraint(
 
 % Cumulative constraint
 constraint cumulative(coords_y, shape_y_r, shape_x_r, W);
+%constraint cumulative(coords_x, shape_x_r, shape_y_r, H);
 
 % the total height should be as low as possible. 
-constraint forall(i in CIRCUITS) (H >= coords_y[i] + heights[i]);
+constraint forall(i in CIRCUITS) (H >= coords_y[i] + shape_y_r[i]);
 
 solve 
   :: int_search([H], input_order, indomain_min)

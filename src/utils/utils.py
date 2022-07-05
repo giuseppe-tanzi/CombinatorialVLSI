@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 def write_solution(output_dir, n, solution, stat):
     # TODO : Scrivere la parte di salvataggio su file di questi risultati.
-    print(solution, stat)
+    print(f'{n})', solution, stat)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, f"ins_{n}.txt")
     with open(filename, 'w') as sol:
