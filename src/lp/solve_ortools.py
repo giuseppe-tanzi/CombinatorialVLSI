@@ -83,9 +83,15 @@ class LPsolver:
             print('Total time elapsed: ', total_time)
 
             if status == pywraplp.Solver.OPTIMAL:
+                circuit_pos = []
+                for i in range(self.circuits_num):
+                    for j in range(len(C[i])):
+                        if X[i][j].solution_value() > 0:
+                            indexes = np.where((np.array(C[i][j]).reshape((self.max_width, max_h))) == 1)
+                    circuit_pos.append((widths[i], heights[i], indexes[1][0], indexes[0][0]))
+
                 self.print_solution(C, X, max_h)
-                # return (self.ins_num, ((self.max_width, max_h), circuit_pos), total_time)
-                break
+                return self.ins_num, ((self.max_width, max_h), circuit_pos), total_time
 
     def print_solution(self, C, X, max_h):
         representation = np.zeros((self.max_width, max_h))
