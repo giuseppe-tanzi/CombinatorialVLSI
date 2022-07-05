@@ -4,6 +4,7 @@ from cp.solve import CPsolver
 from lp.solve_ortools import LPsolver
 from sat.solve import SATsolver
 from src.smt.solve import SMTsolver
+from src.smt.solveOMT import OMTsolver
 from utils.utils import load_data, display_solution
 
 
@@ -36,6 +37,8 @@ def main():
         solver = SATsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
     elif args.solver == "smt":
         solver = SMTsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
+    elif args.solver == "omt":
+        solver = OMTsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
     elif args.solver == "lp":
         solver = LPsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
     else:
