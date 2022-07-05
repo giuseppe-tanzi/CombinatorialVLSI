@@ -16,6 +16,8 @@ def write_solution(output_dir, n, solution, stat):
             w, h, x, y = c
             sol.write("{0} {1} {2} {3}\n".format(w, h, x, y))
 
+        sol.write("{0}\n".format(stat))
+
 
 def load_instance(filename):
     with open(filename, 'r') as instance:

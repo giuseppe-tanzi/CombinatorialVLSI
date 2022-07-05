@@ -1,16 +1,16 @@
 import time
 
 from utils.utils import write_solution
-from z3 import And, Or, sat, Solver, Sum, If, IntVector, Implies
+from z3 import And, Or, sat, Sum, If, IntVector, Implies, Int, Optimize
 
 
-class SMTsolver:
+class OMTsolver:
 
     def __init__(self, data, output_dir, rotation=False, timeout=300):
         self.data = data
         self.rotation = rotation
         if output_dir == "":
-            output_dir = "../data/output_smt/"
+            output_dir = "../data/output_smt_omt/"
         self.output_dir = output_dir
         self.timeout = timeout
 
@@ -22,6 +22,7 @@ class SMTsolver:
         self.sol = None
         self.h = None
         self.w = None
+        self.plate_height = None
 
     def solve(self):
         solutions = []
@@ -42,38 +43,33 @@ class SMTsolver:
             self.w[i], _ = self.circuits[i]
             _, self.h[i] = self.circuits[i]
 
-        #        self.w, self.h = ([i for i, _ in self.circuits], [j for _, j in self.circuits])
+        self.sol = Optimize()
+        self.sol.set(timeout=self.timeout * 1000)
+        self.set_constraints()
+
+        solve_time = time.time()
+        if self.sol.check() == sat:
+            spent_time = time.time() - solve_time
+            circuits_pos = self.evaluate()
+            write_solution(self.output_dir, ins_num, ((self.max_width, self.plate_height), circuits_pos),
+                           spent_time)
+            return ins_num, ((self.max_width, self.plate_height), circuits_pos), spent_time
+        else:
+            try_timeout = round((self.timeout - (time.time() - solve_time)))
+            if try_timeout < 0:
+                return None, 0
+        return None, 0
+
+    def set_constraints(self):
 
         lower_bound = sum([self.h[i] * self.w[i] for i in range(self.circuits_num)]) // self.max_width
         upper_bound = sum(self.h) - min(self.h)
 
-        for plate_height in range(lower_bound, upper_bound + 1):
-            self.sol = Solver()
-            self.sol.set(timeout=self.timeout * 1000)
-            #            plate, rotations = self.set_constraints(plate_height)
-
-            self.set_constraints(plate_height)
-
-            solve_time = time.time()
-            if self.sol.check() == sat:
-                spent_time = time.time() - solve_time
-                circuits_pos = self.evaluate()
-                write_solution(self.output_dir, ins_num, ((self.max_width, plate_height), circuits_pos),
-                               spent_time)
-                return ins_num, ((self.max_width, plate_height), circuits_pos), spent_time
-            else:
-                try_timeout = round((self.timeout - (time.time() - solve_time)))
-                if try_timeout < 0:
-                    return None, 0
-        return None, 0
-
-    def set_constraints(self, plate_height):
-
         self.x_positions = IntVector('x_pos', self.circuits_num)
         self.y_positions = IntVector('y_pos', self.circuits_num)
+        plate_height = Int('plate_height')
 
-        # actual widths and heights if rotation allowed
-        w, h = self.w, self.h
+        w, h = self.w, self.h  # actual widths and heights if rotation allowed
 
         # Handling rotation
         if self.rotation:
@@ -91,6 +87,8 @@ class SMTsolver:
 
         self.sol.add([And(0 <= self.y_positions[i], self.y_positions[i] <= plate_height - self.h[i])
                       for i in range(self.circuits_num)])
+
+        self.sol.add(And(lower_bound <= plate_height, plate_height <= upper_bound))
 
         # DO NOT OVERLAP
         for i in range(1, self.circuits_num):
@@ -117,16 +115,12 @@ class SMTsolver:
                                         Sum(self.x_positions[j],
                                             self.w[j]) <= self.x_positions[i])))
 
-        # SUM OVER ROWS (CUMULATIVE)
-        for u in range(plate_height):
-            self.sol.add(
-                self.max_width >= Sum([If(And(self.y_positions[i] <= u, u < Sum(self.y_positions[i], self.h[i])),
-                                          self.w[i], 0) for i in range(self.circuits_num)]))
-
         # SUM OVER COLUMNS (CUMULATIVE)
         for u in range(self.max_width):
             self.sol.add(plate_height >= Sum([If(And(self.x_positions[i] <= u, u < Sum(self.x_positions[i], self.w[i])),
                                                  self.h[i], 0) for i in range(self.circuits_num)]))
+
+        self.plate_height = self.sol.minimize(plate_height)
 
     def evaluate(self):
         return [(self.w[i], self.h[i], int(self.sol.model().evaluate(self.x_positions[i]).as_string()),

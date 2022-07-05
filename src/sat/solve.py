@@ -1,11 +1,10 @@
-import os
 import time
-from z3 import And, Or, Bool, sat, Not, Solver, Implies
 from itertools import combinations
 
-from utils.utils import write_solution
+from z3 import And, Or, Bool, sat, Not, Solver
 
-from sat_minelli import positive_range, indomain
+
+# from sat_minelli import positive_range, indomain
 
 
 class SATsolver:
