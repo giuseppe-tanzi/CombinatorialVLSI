@@ -35,7 +35,6 @@ class LPsolver:
                     val_pos.append(create_binary_encoding)
         return val_pos
 
-    # @timeout_decorator.timeout(300, use_signals=False)
     def solve_instance(self, instance):
         start = time.time()
         _, self.max_width, self.circuits = instance
@@ -54,7 +53,7 @@ class LPsolver:
             # creating the model
             solver = pywraplp.Solver.CreateSolver('SCIP')
             solver.SetTimeLimit(self.timeout*1000)
-            solver.EnableOutput()
+            # solver.EnableOutput()
             # solver.SetNumThreads(8)
 
             # X contiene, per ogni circuito, un numero di liste pari al numero di posizioni valide che il circuito
