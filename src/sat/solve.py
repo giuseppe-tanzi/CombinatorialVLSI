@@ -38,7 +38,7 @@ class SATsolver:
 
         self.w, self.h = ([i for i, _ in self.circuits], [j for _, j in self.circuits])
 
-        lower_bound = sum([self.h[i] * self.w[i] for i in range(self.circuits_num)]) // self.max_width
+        lower_bound = int(round(sum([self.h[i] * self.w[i] for i in range(self.circuits_num)]) / self.max_width))
         upper_bound = sum(self.h) - min(self.h)
 
         start_time = time.time()
