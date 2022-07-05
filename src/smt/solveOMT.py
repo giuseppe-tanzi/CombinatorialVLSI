@@ -51,9 +51,9 @@ class OMTsolver:
         if self.sol.check() == sat:
             spent_time = time.time() - solve_time
             circuits_pos = self.evaluate()
-            write_solution(self.output_dir, ins_num, ((self.max_width, self.plate_height), circuits_pos),
+            write_solution(self.output_dir, ins_num, ((self.max_width, self.plate_height.value()), circuits_pos),
                            spent_time)
-            return ins_num, ((self.max_width, self.plate_height), circuits_pos), spent_time
+            return ins_num, ((self.max_width, self.plate_height.value()), circuits_pos), spent_time
         else:
             try_timeout = round((self.timeout - (time.time() - solve_time)))
             if try_timeout < 0:
