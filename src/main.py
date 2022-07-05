@@ -1,8 +1,9 @@
 import argparse
 
 from cp.solve import CPsolver
-from sat.solve import SATsolver
 from lp.solve_ortools import LPsolver
+from sat.solve import SATsolver
+from src.smt.solve import SMTsolver
 from utils.utils import load_data, display_solution
 
 
@@ -34,8 +35,7 @@ def main():
     elif args.solver == "sat":
         solver = SATsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
     elif args.solver == "smt":
-        pass
-        # solver = SMTsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
+        solver = SMTsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
     elif args.solver == "lp":
         solver = LPsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
     else:
