@@ -56,21 +56,21 @@ class SMTLIBSolver:
             lines = []
 
             lines.append(f"(set-option :timeout {self.timeout * 1000})")
-            #            lines.append("(set-logic QF_LIA)")
+            lines.append("(set-logic QF_LIA)")
 
             # Decision Variables
-            #            for i in range(self.circuits_num):
-            #                lines.append(f"(declare-const x_{i} (Int) Int)")
-            #                lines.append(f"(declare-const y_{i} (Int) Int)")
+            for i in range(self.circuits_num):
+                lines.append(f"(declare-const x_{i} Int)")
+                lines.append(f"(declare-const y_{i} Int)")
 
-            lines.append("(declare-fun x (Int) Int)")
-            lines.append("(declare-fun y (Int) Int)")
+            # lines.append("(declare-fun x (Int) Int)")
+            # lines.append("(declare-fun y (Int) Int)")
 
             # Domain
-            lines += [f"(assert (and (>= (select x {i}) 0) (<= (select x {i}) (- {self.max_width} {self.w[i]}))))" for i
+            lines += [f"(assert (and (>= x_{i} 0) (<= x_{i} (- {self.max_width} {self.w[i]}))))" for i
                       in
                       range(self.circuits_num)]
-            lines += [f"(assert (and (>= (select y {i}) 0) (<= (select y {i}) (- {self.plate_height} {self.h[i]}))))"
+            lines += [f"(assert (and (>= y_{i} 0) (<= y_{i} (- {self.plate_height} {self.h[i]}))))"
                       for i in
                       range(self.circuits_num)]
 
@@ -78,45 +78,45 @@ class SMTLIBSolver:
 
             # DO NOT OVERLAP
             lines += [f"(assert (or "
-                      f"(<= (+ (select x {i}) {self.w[i]}) (select x {j})) "
-                      f"(<= (+ (select x {j}) {self.w[j]}) (select x {i})) "
-                      f"(<= (+ (select y {i}) {self.h[i]}) (select y {j})) "
-                      f"(<= (+ (select y {j}) {self.h[j]}) (select y {i}))))" for i in range(1, self.circuits_num) for j
+                      f"(<= (+ x_{i} {self.w[i]}) x_{j}) "
+                      f"(<= (+ x_{j} {self.w[j]}) x_{i}) "
+                      f"(<= (+ y_{i} {self.h[i]}) y_{j}) "
+                      f"(<= (+ x_{j} {self.h[j]}) y_{i})))" for i in range(1, self.circuits_num) for j
                       in range(0, i)]
 
             # Two rectangles with same dimensions
             lines += [f"(assert (=> (and (= {self.w[i]} {self.w[j]}) (= {self.h[i]} {self.h[j]}))"
                       f" (or "
-                      f"(> (select x {j}) (select x {i})) "
-                      f"(and (= (select x {j}) (select x {i})) (>= (select y {j}) (select y {i}))))))"
+                      f"(> x_{j} x_{i}) "
+                      f"(and (= x_{j} x_{i}) (>= y_{j} y_{i})))))"
                       for i in range(self.circuits_num) for j in
                       range(self.circuits_num)
                       if i != j]
 
             # If two rectangles cannot be packed side to side along the x axis
             lines += [
-                f"(assert (=> (> (+ {self.w[i]} {self.w[j]}) {self.max_width}) (or (<= (+ (select y {i}) {self.h[i]}) (select y {j})) (<= (+ (select y {j}) {self.h[j]}) (select y {i})))))"
+                f"(assert (=> (> (+ {self.w[i]} {self.w[j]}) {self.max_width}) (or (<= (+ y_{i} {self.h[i]}) y_{j}) (<= (+ y_{j} {self.h[j]}) y_{i}))))"
                 for i in range(self.circuits_num) for j in range(self.circuits_num) if i != j]
 
             # If two rectangles cannot be packed one over the other along the y axis
             lines += [
-                f"(assert (=> (> (+ {self.h[i]} {self.h[j]}) {self.plate_height}) (or (<= (+ (select x {i}) {self.w[i]}) (select x {j})) (<= (+ (select x {j}) {self.w[j]}) (select x {i})))))"
+                f"(assert (=> (> (+ {self.h[i]} {self.h[j]}) {self.plate_height}) (or (<= (+ x_{i} {self.w[i]}) x_{j}) (<= (+ x_{j} {self.w[j]}) x_{i}))))"
                 for i in range(self.circuits_num) for j in range(self.circuits_num) if i != j]
 
             # SUM OVER ROWS (CUMULATIVE)
             for u in range(self.plate_height):
                 lines.append(
-                    f"(assert (>= {self.max_width} (+ {' '.join([f'(ite (and (<= (select y {i}) {u}) (< {u} (+ (select y {i}) {self.h[i]}))) {self.w[i]} 0)' for i in range(self.circuits_num)])})))")
+                    f"(assert (>= {self.max_width} (+ {' '.join([f'(ite (and (<= y_{i} {u}) (< {u} (+ y_{i} {self.h[i]}))) {self.w[i]} 0)' for i in range(self.circuits_num)])})))")
 
             # SUM OVER COLUMNS (CUMULATIVE)
             for u in range(self.max_width):
                 lines.append(
-                    f"(assert (>= {self.plate_height} (+ {' '.join([f'(ite (and (<= (select x {i}) {u}) (< {u} (+ (select x {i}) {self.w[i]}))) {self.h[i]} 0)' for i in range(self.circuits_num)])})))")
+                    f"(assert (>= {self.plate_height} (+ {' '.join([f'(ite (and (<= x_{i} {u}) (< {u} (+ x_{i} {self.w[i]}))) {self.h[i]} 0)' for i in range(self.circuits_num)])})))")
 
             # Result
             lines.append("(check-sat)")
             lines.append(
-                f"(get-value ({' '.join([f'(select x {i}) (select y {i})' for i in range(self.circuits_num)])}))")
+                f"(get-value ({' '.join([f'x_{i} y_{i}' for i in range(self.circuits_num)])}))")
             lines.append("(exit)")
 
             with open(self.file, "w") as f:
@@ -131,7 +131,7 @@ class SMTLIBSolver:
 
             solution = output.decode('ascii')
 
-            if solution.split("\r")[0] == 'sat':
+            if solution.split("\r")[0] == 'sat' or time_spent > 300:
                 break
 
         return solution, time_spent
