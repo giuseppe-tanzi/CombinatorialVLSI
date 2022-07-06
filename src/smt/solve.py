@@ -27,7 +27,6 @@ class SMTsolver:
         solutions = []
         for d in self.data:
             ins_num = d[0]
-            print(f"Instance num: {ins_num}")
             solutions.append(self.solve_instance(d, ins_num))
         return solutions
 
@@ -42,15 +41,12 @@ class SMTsolver:
             self.w[i], _ = self.circuits[i]
             _, self.h[i] = self.circuits[i]
 
-        #        self.w, self.h = ([i for i, _ in self.circuits], [j for _, j in self.circuits])
-
         lower_bound = sum([self.h[i] * self.w[i] for i in range(self.circuits_num)]) // self.max_width
         upper_bound = sum(self.h) - min(self.h)
 
         for plate_height in range(lower_bound, upper_bound + 1):
             self.sol = Solver()
             self.sol.set(timeout=self.timeout * 1000)
-            #            plate, rotations = self.set_constraints(plate_height)
 
             self.set_constraints(plate_height)
 

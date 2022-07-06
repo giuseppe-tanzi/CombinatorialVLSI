@@ -28,7 +28,6 @@ class OMTsolver:
         solutions = []
         for d in self.data:
             ins_num = d[0]
-            print(f"Instance num: {ins_num}")
             solutions.append(self.solve_instance(d, ins_num))
         return solutions
 
