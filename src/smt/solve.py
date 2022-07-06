@@ -59,7 +59,7 @@ class SMTsolver:
                 return ins_num, ((self.max_width, plate_height), circuits_pos), spent_time
             else:
                 try_timeout = round((self.timeout - (time.time() - solve_time)))
-                if try_timeout < 0:
+                if try_timeout <= 0:
                     return None, 0
         return None, 0
 
