@@ -24,7 +24,10 @@ class SATsolver:
         for d in self.data:
             solution = self.solve_instance(d)
             ins_num = d[0]
-            write_solution(self.output_dir, ins_num, solution[0], solution[1])
+            if solution[0]:
+                write_solution(self.output_dir, ins_num, solution[0], solution[1])
+            else:
+                print(print(f'{ins_num})', (None, 0), 0))
             solutions.append((ins_num, solution[0], solution[1]))
         return solutions
 

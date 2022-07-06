@@ -1,5 +1,5 @@
 include "globals.mzn";
-%mzn_ignore_symmetry_breaking_constraints=true
+include "lex_lesseq.mzn"; 
 
 int: W; % maximum width
 int: N; % number of circuits
@@ -21,22 +21,27 @@ array[CIRCUITS] of var 0..max_Y: coords_y;
 
 array[CIRCUITS] of int : ordered_c = sort_by(CIRCUITS, [-widths[i] * heights[i]| i in CIRCUITS]);
 
-% only the right box can't be bigger than the maximum width W.
+% Plate bounds constraints (width and height)
 constraint forall(i in CIRCUITS) (W >= coords_x[i] + widths[i]);
 
 constraint forall(i in CIRCUITS) (H >= coords_y[i] + heights[i]);
                  
-% Global constraint for no overlapping circuit.
+% No-overlapping constraint
 constraint diffn(
   coords_x,
   coords_y,
   widths,
   heights);
   
-% breaking symmetries.
-include "lex_lesseq.mzn"; 
-% MAXIMUM EFFECTIVE WIDTH
+% Cumulative constraints
+constraint cumulative(coords_y, heights, widths, W);
+
+constraint cumulative(coords_x, widths, heights, H);
+  
+% Maximum effective width
 var int: W_E = max([coords_x[i] + widths[i] | i in CIRCUITS]);
+
+% Breaking symmetries
 
 %constraint symmetry_breaking_constraint(
 %  lex_lesseq(coords_y, [H - coords_y[i] - heights[i] | i in CIRCUITS])
@@ -52,12 +57,6 @@ constraint symmetry_breaking_constraint(
     int: c1 = ordered_c[1], int: c2 = ordered_c[2]
   } in lex_less([coords_y[c1],coords_x[c1]], [coords_y[c2],coords_x[c2]])
 );
-
-% Cumulative constraint
-constraint cumulative(coords_y, heights, widths, W);
-
-constraint cumulative(coords_x, widths, heights, H);
-
 
 %solve :: seq_search([
 %    int_search(coords_y, first_fail, indomain_min),
