@@ -32,15 +32,15 @@ def main():
     data = load_data(args.num_instance, args.input_dir)
     print(data)
     if args.solver == "cp":
-        solver = CPsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
+        solver = CPsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=int(args.timeout))
     elif args.solver == "sat":
-        solver = SATsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
+        solver = SATsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=int(args.timeout))
     elif args.solver == "smt":
-        solver = SMTsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
+        solver = SMTsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=int(args.timeout))
     elif args.solver == "omt":
-        solver = OMTsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
+        solver = OMTsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=int(args.timeout))
     elif args.solver == "lp":
-        solver = LPsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=args.timeout)
+        solver = LPsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=int(args.timeout))
     else:
         raise argparse.ArgumentError("Please select a solver between cp, sat, smt and lp.")
 
