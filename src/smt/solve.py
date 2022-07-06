@@ -49,6 +49,7 @@ class SMTsolver:
         for plate_height in range(lower_bound, upper_bound + 1):
             self.sol = Solver()
             self.sol.set(timeout=self.timeout * 1000)
+            self.sol.set(threads=4)
 
             self.set_constraints(plate_height, widths, heights)
 
@@ -90,7 +91,6 @@ class SMTsolver:
 
         self.sol.add([And(0 <= self.y_positions[i], self.y_positions[i] <= plate_height - self.h[i])
                       for i in range(self.circuits_num)])
-
 
         for i in range(1, self.circuits_num):
             for j in range(0, i):
