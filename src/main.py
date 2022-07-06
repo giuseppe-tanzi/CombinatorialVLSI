@@ -27,6 +27,7 @@ def main():
     parser.add_argument("-p", "--report", help="Make the report", default=False)
     args = parser.parse_args()
     print(args)
+    print(1)
 
     print("Loading instances")
     data = load_data(args.num_instance, args.input_dir)

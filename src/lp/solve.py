@@ -34,6 +34,7 @@ class LPsolver:
 
         lower_bound = sum([h[i] * w[i] for i in range(self.circuits_num)]) // self.max_width
         upper_bound = sum(h) - min(h)
+        print(1)
 
         for max_h in range(lower_bound, upper_bound + 1):
 
