@@ -2,9 +2,7 @@ import time
 from itertools import combinations
 
 from z3 import And, Or, Bool, sat, Not, Solver
-
-
-# from sat_minelli import positive_range, indomain
+from utils.utils import write_solution
 
 
 class SATsolver:
@@ -26,8 +24,7 @@ class SATsolver:
         for d in self.data:
             solution = self.solve_instance(d)
             ins_num = d[0]
-            # write_solution(ins_num, solution[0], solution[1])
-            print(solution[1])
+            write_solution(self.output_dir, ins_num, solution[0], solution[1])
             solutions.append((ins_num, solution[0], solution[1]))
         return solutions
 
@@ -68,7 +65,7 @@ class SATsolver:
         self.sol.add(self.at_least_one(bool_vars))
 
     def set_constraints(self, plate_height):
-        print(self.max_width)
+        # print(self.max_width)
         # Variables
         px = [[Bool(f"px_{i + 1}_{e}") for e in range(0, self.max_width - self.w[i] + 1)] for i in
               range(self.circuits_num)]
@@ -80,10 +77,10 @@ class SATsolver:
         ud = [[Bool(f"ud_{i + 1}_{j + 1}") for j in range(self.circuits_num)] for i in
               range(self.circuits_num)]
 
-        print("Px \n", px)
-        print("Py \n", py)
-        print("Lr \n", lr)
-        print("Ud \n", ud)
+        # print("Px \n", px)
+        # print("Py \n", py)
+        # print("Lr \n", lr)
+        # print("Ud \n", ud)
 
         # Place a circuit one time
         for x in px:
