@@ -116,13 +116,13 @@ class LPsolver:
             for u in range(max_h):
                 solver.Add(self.max_width >= sum([c_w[i][u] for i in range(self.circuits_num)]))
 
-            print('Instantiation time: ', (time.time() - start))
+            # print('Instantiation time: ', (time.time() - start))
             status = solver.Solve()
             total_time = solver.WallTime() / 1000
-            print('Total time elapsed: ', total_time)
+            # print('Total time elapsed: ', total_time)
 
             if status == pywraplp.Solver.OPTIMAL:
-                print([r.solution_value() for r in rot])
+                # print([r.solution_value() for r in rot])
                 circuit_pos = [(w, h, x, y) for w, h, x, y in
                                zip([a.solution_value() for a in widths], [a.solution_value() for a in heights],
                                    [a.solution_value() for a in x], [a.solution_value() for a in y])]
@@ -130,6 +130,9 @@ class LPsolver:
                 # self.print_solution(C, X, max_h)
                 write_solution(self.output_dir, self.ins_num, ((self.max_width, max_h), circuit_pos), total_time)
                 return self.ins_num, ((self.max_width, max_h), circuit_pos), total_time
+            else:
+                print(f'{self.ins_num})', (None, 0), 0)
+                return None, 0
 
     def print_solution(self, C, X, max_h):
         representation = np.zeros((self.max_width, max_h))
