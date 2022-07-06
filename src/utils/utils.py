@@ -1,7 +1,7 @@
 from glob import glob
 import os
 import matplotlib.pyplot as plt
-
+import numpy as np
 
 def write_solution(output_dir, n, solution, stat):
     # TODO : Scrivere la parte di salvataggio su file di questi risultati.
@@ -58,4 +58,13 @@ def display_solution(title, sizes_plate, n_circuits, sizes_circuits, pos_circuit
     ax.set_xlabel('width_plate')
     ax.set_ylabel('height_plate')
 
+    plt.show()
+
+def plot_times(output_dir, solutions):
+    times = [sol[2] for sol in solutions]
+    plt.bar(x = np.arange(1, len(times) + 1), height = times)
+    plt.xlabel('Instance')
+    plt.ylabel('Time (s)')
+    plt.yscale("log")
+    plt.savefig(os.path.join(output_dir, "plot.jpg"))
     plt.show()

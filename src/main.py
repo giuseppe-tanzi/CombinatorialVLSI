@@ -5,7 +5,7 @@ from lp.solve import LPsolver
 from sat.solve import SATsolver
 from src.smt.solve import SMTsolver
 from src.smt.solveOMT import OMTsolver
-from utils.utils import load_data, display_solution
+from utils.utils import load_data, display_solution, plot_times
 
 
 def main():
@@ -24,7 +24,7 @@ def main():
                         default=False, type=bool)
     parser.add_argument("-v", "--visualize", help="Enable solution visualization", default=False, type=bool)
     parser.add_argument("-t", "--timeout", help="Timeout in seconds", default=300)
-    parser.add_argument("-p", "--report", help="Make the report", default=False)
+    parser.add_argument("-p", "--plot", help="Plot of solving times", default=False)
     args = parser.parse_args()
     print(args)
 
@@ -52,9 +52,8 @@ def main():
             circuits = [(w, h) for (w, h, _, _) in sol[1][1]]
             circuits_pos = [(x, y) for (_, _, x, y) in sol[1][1]]
             display_solution(f'ins-{sol[0]}', (sol[1][0][0], sol[1][0][1]), len(sol[1][1]), circuits, circuits_pos)
-    if args.report:
-        # TODO : create the report
-        pass
+    if args.plot:
+        plot_times(args.output_dir, solutions)
 
 
 if __name__ == '__main__':
