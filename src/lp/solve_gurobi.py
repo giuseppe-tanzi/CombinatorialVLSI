@@ -77,7 +77,6 @@ class LPsolver:
                 break
             except:
                 pass
-        print(1)
 
     def print_solution(self, C, X, max_h):
         # this first line is used only to make the print fail early in case there's no solution for the current h.
