@@ -1,7 +1,7 @@
 import argparse
 
 from cp.solve import CPsolver
-from lp.solve_ortools import LPsolver
+from lp.solve import LPsolver
 from sat.solve import SATsolver
 from src.smt.solve import SMTsolver
 from src.smt.solveOMT import OMTsolver
