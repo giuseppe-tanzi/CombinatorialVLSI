@@ -2,7 +2,7 @@ import time
 
 import numpy as np
 from utils.utils import write_solution
-from z3 import And, Or, sat, Sum, If, IntVector, Implies, Tactic
+from z3 import And, Or, sat, Sum, If, IntVector, Implies, Tactic, BoolVector
 
 
 class SMTsolver:
@@ -83,11 +83,11 @@ class SMTsolver:
 
         # Handling rotation
         if self.rotation:
-            rotations = IntVector('rotations', self.circuits_num)
-            self.sol.add([And(0 <= rotations[i], rotations[i] <= 1) for i in range(self.circuits_num)])
-            self.sol.add([Implies(widths[i] == heights[i], rotations[i] == 0) for i in range(self.circuits_num)])
+            rotations = BoolVector('rotations', self.circuits_num)
+            # self.sol.add([And(0 <= rotations[i], rotations[i] <= 1) for i in range(self.circuits_num)])
+            self.sol.add([Implies(widths[i] == heights[i], rotations[i] == False) for i in range(self.circuits_num)])
             for i in range(self.circuits_num):
-                self.sol.add(If(rotations[i] == 1, And(widths[i] == self.h[i], heights[i] == self.w[i]),
+                self.sol.add(If(rotations[i], And(widths[i] == self.h[i], heights[i] == self.w[i]),
                                 And(widths[i] == self.w[i], heights[i] == self.h[i])))
 
         # CONSTRAINTS
