@@ -2,6 +2,8 @@ import os
 import subprocess
 import time
 
+import numpy as np
+
 
 class SMTLIBsolver:
 
@@ -51,8 +53,14 @@ class SMTLIBsolver:
         lower_bound = sum([self.h[i] * self.w[i] for i in range(self.circuits_num)]) // self.max_width
         upper_bound = sum(self.h) - min(self.h)
 
-        for self.plate_height in range(lower_bound, upper_bound):
+        areas_index = np.argsort([self.h[i] * self.w[i] for i in range(self.circuits_num)])
+        areas_index = areas_index[::-1]
+        # biggests = areas_index[0], areas_index[1]
 
+        self.w = [self.w[areas_index[i]] for i in range(self.circuits_num)]
+        self.h = [self.h[areas_index[i]] for i in range(self.circuits_num)]
+
+        for self.plate_height in range(lower_bound, upper_bound):
             lines = []
 
             lines.append(f"(set-option :timeout {self.timeout * 1000})")
@@ -77,41 +85,39 @@ class SMTLIBsolver:
             # Constraints
 
             # DO NOT OVERLAP
-            lines += [f"(assert (or "
-                      f"(<= (+ x_{i} {self.w[i]}) x_{j}) "
-                      f"(<= (+ x_{j} {self.w[j]}) x_{i}) "
-                      f"(<= (+ y_{i} {self.h[i]}) y_{j}) "
-                      f"(<= (+ x_{j} {self.h[j]}) y_{i})))" for i in range(1, self.circuits_num) for j
-                      in range(0, i)]
+            for i in range(self.circuits_num):
+                for j in range(0, i):
+                    lines.append(f"(assert (or "
+                                 f"(<= (+ x_{i} {self.w[i]}) x_{j}) "
+                                 f"(<= (+ x_{j} {self.w[j]}) x_{i}) "
+                                 f"(<= (+ y_{i} {self.h[i]}) y_{j}) "
+                                 f"(<= (+ y_{j} {self.h[j]}) y_{i})))")
 
-            # Two rectangles with same dimensions
-            lines += [f"(assert (=> (and (= {self.w[i]} {self.w[j]}) (= {self.h[i]} {self.h[j]}))"
-                      f" (or "
-                      f"(> x_{j} x_{i}) "
-                      f"(and (= x_{j} x_{i}) (>= y_{j} y_{i})))))"
-                      for i in range(self.circuits_num) for j in
-                      range(self.circuits_num)
-                      if i != j]
+                    # Two rectangles with same dimensions
+                    lines.append(f"(assert (=> (and (= {self.w[i]} {self.w[j]}) (= {self.h[i]} {self.h[j]}))"
+                                 f" (or "
+                                 f"(> x_{j} x_{i}) "
+                                 f"(and (= x_{j} x_{i}) (>= y_{j} y_{i})))))")
 
-            # If two rectangles cannot be packed side to side along the x axis
-            lines += [
-                f"(assert (=> (> (+ {self.w[i]} {self.w[j]}) {self.max_width}) (or (<= (+ y_{i} {self.h[i]}) y_{j}) (<= (+ y_{j} {self.h[j]}) y_{i}))))"
-                for i in range(self.circuits_num) for j in range(self.circuits_num) if i != j]
+            # # If two rectangles cannot be packed side to side along the x axis
+            # lines += [
+            #     f"(assert (=> (> (+ {self.w[i]} {self.w[j]}) {self.max_width}) (or (<= (+ y_{i} {self.h[i]}) y_{j}) (<= (+ y_{j} {self.h[j]}) y_{i}))))"
+            #     for i in range(self.circuits_num) for j in range(self.circuits_num) if i != j]
+            #
+            # # If two rectangles cannot be packed one over the other along the y axis
+            # lines += [
+            #     f"(assert (=> (> (+ {self.h[i]} {self.h[j]}) {self.plate_height}) (or (<= (+ x_{i} {self.w[i]}) x_{j}) (<= (+ x_{j} {self.w[j]}) x_{i}))))"
+            #     for i in range(self.circuits_num) for j in range(self.circuits_num) if i != j]
 
-            # If two rectangles cannot be packed one over the other along the y axis
-            lines += [
-                f"(assert (=> (> (+ {self.h[i]} {self.h[j]}) {self.plate_height}) (or (<= (+ x_{i} {self.w[i]}) x_{j}) (<= (+ x_{j} {self.w[j]}) x_{i}))))"
-                for i in range(self.circuits_num) for j in range(self.circuits_num) if i != j]
-
-            # SUM OVER ROWS (CUMULATIVE)
-            for u in range(self.plate_height):
-                lines.append(
-                    f"(assert (>= {self.max_width} (+ {' '.join([f'(ite (and (<= y_{i} {u}) (< {u} (+ y_{i} {self.h[i]}))) {self.w[i]} 0)' for i in range(self.circuits_num)])})))")
-
-            # SUM OVER COLUMNS (CUMULATIVE)
-            for u in range(self.max_width):
-                lines.append(
-                    f"(assert (>= {self.plate_height} (+ {' '.join([f'(ite (and (<= x_{i} {u}) (< {u} (+ x_{i} {self.w[i]}))) {self.h[i]} 0)' for i in range(self.circuits_num)])})))")
+            # # SUM OVER ROWS (CUMULATIVE)
+            # for u in range(self.plate_height):
+            #     lines.append(
+            #         f"(assert (>= {self.max_width} (+ {' '.join([f'(ite (and (<= y_{i} {u}) (< {u} (+ y_{i} {self.h[i]}))) {self.w[i]} 0)' for i in range(self.circuits_num)])})))")
+            #
+            # # SUM OVER COLUMNS (CUMULATIVE)
+            # for u in range(self.max_width):
+            #     lines.append(
+            #         f"(assert (>= {self.plate_height} (+ {' '.join([f'(ite (and (<= x_{i} {u}) (< {u} (+ x_{i} {self.w[i]}))) {self.h[i]} 0)' for i in range(self.circuits_num)])})))")
 
             # Result
             lines.append("(check-sat)")
