@@ -2,7 +2,7 @@ import time
 
 import numpy as np
 from utils.utils import write_solution
-from z3 import And, Or, sat, Sum, If, IntVector, Implies, Tactic, BoolVector
+from z3 import And, Or, sat, Sum, If, IntVector, Implies, Tactic, BoolVector, Not
 
 
 class SMTsolver:
@@ -26,7 +26,7 @@ class SMTsolver:
 
     def solve(self):
         solutions = []
-        for d in self.data:
+        for d in self.data[:15]:
             ins_num = d[0]
             solutions.append(self.solve_instance(d, ins_num))
         return solutions
@@ -49,7 +49,6 @@ class SMTsolver:
 
         for plate_height in range(lower_bound, upper_bound + 1):
             self.sol = Tactic('qflra').solver()
-            # self.sol = Tactic('qflia').solver()
             # z3.describe_tactics()
             self.sol.set(timeout=self.timeout * 1000)
             # self.sol.set(threads=4)
@@ -66,9 +65,9 @@ class SMTsolver:
             else:
                 try_timeout = round((self.timeout - (time.time() - solve_time)))
                 if try_timeout <= 0:
-                    print(f'{ins_num})', (None, 0), try_timeout)
-                    return None, 0
-        return None, 0
+                    write_solution(self.output_dir, ins_num, None, 0)
+                    return ins_num, None, 0
+        return ins_num, None, 0
 
     def set_constraints(self, plate_height, widths, heights):
 
@@ -77,18 +76,21 @@ class SMTsolver:
 
         areas_index = np.argsort([heights[i] * widths[i] for i in range(self.circuits_num)])
         areas_index = areas_index[::-1]
-        self.w = [self.w[areas_index[i]] for i in range(self.circuits_num)]
-        self.h = [self.h[areas_index[i]] for i in range(self.circuits_num)]
-        # biggests = areas_index[-1], areas_index[-2]
+        biggests = areas_index[0], areas_index[1]
 
         # Handling rotation
         if self.rotation:
             rotations = BoolVector('rotations', self.circuits_num)
-            # self.sol.add([And(0 <= rotations[i], rotations[i] <= 1) for i in range(self.circuits_num)])
-            self.sol.add([Implies(widths[i] == heights[i], rotations[i] == False) for i in range(self.circuits_num)])
+            widths = [widths[areas_index[i]] for i in range(self.circuits_num)]
+            heights = [heights[areas_index[i]] for i in range(self.circuits_num)]
+
             for i in range(self.circuits_num):
                 self.sol.add(If(rotations[i], And(widths[i] == self.h[i], heights[i] == self.w[i]),
                                 And(widths[i] == self.w[i], heights[i] == self.h[i])))
+                self.sol.add(If(widths[i] == heights[i], Not(rotations[i]), Or(rotations[i], Not(rotations[i]))))
+        else:
+            self.w = [self.w[areas_index[i]] for i in range(self.circuits_num)]
+            self.h = [self.h[areas_index[i]] for i in range(self.circuits_num)]
 
         # CONSTRAINTS
 
@@ -117,8 +119,8 @@ class SMTsolver:
                                      Or(self.x_positions[j] > self.x_positions[i],
                                         And(self.x_positions[j] == self.x_positions[i],
                                             self.y_positions[j] >= self.y_positions[i]))))
-                #
-                # If two rectangles cannot be packed side to side along the x axis
+
+                # # If two rectangles cannot be packed side to side along the x axis
                 # self.sol.add(Implies(Sum(self.w[i], self.w[j]) > self.max_width,
                 #                      Or(Sum(self.y_positions[i], self.h[i]) <= self.y_positions[j],
                 #                         Sum(self.y_positions[j], self.h[j]) <= self.y_positions[i])))
