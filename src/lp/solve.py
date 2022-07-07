@@ -131,8 +131,8 @@ class LPsolver:
                 write_solution(self.output_dir, self.ins_num, ((self.max_width, max_h), circuit_pos), total_time)
                 return self.ins_num, ((self.max_width, max_h), circuit_pos), total_time
             else:
-                print(f'{self.ins_num})', (None, 0), 0)
-                return None, 0
+                write_solution(self.output_dir, self.ins_num, None, 0)
+                return self.ins_num, None, 0
 
     def print_solution(self, C, X, max_h):
         representation = np.zeros((self.max_width, max_h))
