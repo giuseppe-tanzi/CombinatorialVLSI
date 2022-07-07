@@ -29,7 +29,7 @@ def main():
     print(args)
 
     print("Loading instances")
-    data = load_data(args.num_instance, args.input_dir)
+    data = load_data(args.num_instance, args.input_dir)[:13]
     print(data)
     if args.solver == "cp":
         solver = CPsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=int(args.timeout))
@@ -53,7 +53,7 @@ def main():
             circuits_pos = [(x, y) for (_, _, x, y) in sol[1][1]]
             display_solution(f'ins-{sol[0]}', (sol[1][0][0], sol[1][0][1]), len(sol[1][1]), circuits, circuits_pos)
     if args.plot:
-        plot_times(args.output_dir, solutions)
+        plot_times(solver.output_dir)
 
 
 if __name__ == '__main__':
