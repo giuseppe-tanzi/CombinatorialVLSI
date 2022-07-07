@@ -69,9 +69,9 @@ def plot_times(output_dir):
     times = np.zeros(40)
     for i in range(1,41):
         for path in solutions_paths:
-            if int(path[path.find("ins-") + 4:path.find(".txt")]) == i:
+            if int(path[path.find("ins_") + 4:path.find(".txt")]) == i:
                 with open(path, 'r') as f:
-                    times[i] = float(f.readlines()[-1])
+                    times[i-1] = float(f.readlines()[-1])
     plt.bar(x = np.arange(1, len(times) + 1), height = times)
     plt.xlabel('Instance')
     plt.ylabel('Time (s)')
