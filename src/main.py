@@ -5,6 +5,7 @@ from lp.solve import LPsolver
 from sat.solve import SATsolver
 from src.smt.solve import SMTsolver
 from src.smt.solveOMT import OMTsolver
+from src.smt.solveRot import SMTsolverRot
 from utils.utils import load_data, display_solution, plot_times
 
 
@@ -39,7 +40,10 @@ def main():
     elif args.solver == "sat":
         solver = SATsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=int(args.timeout))
     elif args.solver == "smt":
-        solver = SMTsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=int(args.timeout))
+        if args.rotation:
+            solver = SMTsolverRot(data=data, output_dir=args.output_dir, timeout=int(args.timeout))
+        else:
+            solver = SMTsolver(data=data, output_dir=args.output_dir, timeout=int(args.timeout))
     elif args.solver == "omt":
         solver = OMTsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=int(args.timeout))
     elif args.solver == "lp":
