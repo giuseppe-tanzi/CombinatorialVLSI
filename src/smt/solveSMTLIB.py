@@ -3,7 +3,7 @@ import subprocess
 import time
 
 
-class SMTLIBSolver:
+class SMTLIBsolver:
 
     def __init__(self, data, output_dir, rotation=False, timeout=300):
         self.data = data
