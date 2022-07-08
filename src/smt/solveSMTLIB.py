@@ -44,7 +44,7 @@ class SMTLIBsolver:
         self.w, self.h = ([i for i, _ in self.circuits], [j for _, j in self.circuits])
         self.file = self.input_dir + "instance_" + str(ins_num) + ".smt2"
 
-        solution, spent_time = self.set_smtlib()
+        solution, spent_time = self.set_constraints(self.w, self.h)
 
         if solution is not None:
             self.parse_solution(solution)
@@ -56,7 +56,7 @@ class SMTLIBsolver:
             write_solution(self.output_dir, ins_num, None, 0)
             return ins_num, None, 0
 
-    def set_smtlib(self):
+    def set_constraints(self, widths, heights):
 
         lower_bound = sum([self.h[i] * self.w[i] for i in range(self.circuits_num)]) // self.max_width
         upper_bound = sum(self.h) - min(self.h)
@@ -135,11 +135,6 @@ class SMTLIBsolver:
             with open(self.file, "w") as f:
                 for line in lines:
                     f.write(line + "\n")
-
-            # thread = "z3 parallel.enable=true parallel.threads.max=4 solve.z3"
-            # thread_process = subprocess.Popen(thread.split(), stdout=subprocess.PIPE)
-            # thread_out, _ = thread_process.communicate()
-            # print(thread_out)
 
             bashCommand = f"z3 -smt2 {self.file}"
             process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
