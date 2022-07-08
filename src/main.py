@@ -50,7 +50,7 @@ def main():
         if args.rotation:
             solver = SMTLIBsolverRot(data=data, output_dir=args.output_dir, timeout=int(args.timeout))
         else:
-            solver = SMTLIBsolver(data=data, output_dir=args.output_dir, timeout=int(args.timeout))
+            solver = SMTsolver(data=data, output_dir=args.output_dir, timeout=int(args.timeout))
     elif args.solver == "omt":
         solver = OMTsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=int(args.timeout))
     elif args.solver == "lp":
