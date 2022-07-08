@@ -49,7 +49,7 @@ class SATsolver:
 
             solve_time = time.time()
             if self.sol.check() == sat:
-                circuits_pos = self.evaluate(plate_height, px, py)
+                circuits_pos = self.evaluate(px, py)
                 return ((self.max_width, plate_height), circuits_pos), (time.time() - solve_time)
             else:
                 try_timeout = round((self.timeout - (time.time() - start_time)))
@@ -138,40 +138,23 @@ class SATsolver:
 
         return px, py
 
-    def evaluate(self, plate_height, px, py):
+    def evaluate(self, px, py):
         m = self.sol.model()
 
         circuits_pos = []
-        X = []
-        Y = []
+        xs = []
+        ys = []
         for i in range(self.circuits_num):
             for e in range(len(px[i])):
-                # print(px[i][e], m.evaluate(px[i][e]))
-                if str(m.evaluate(px[i][e])) == 'True': X.append(e); break
+                if str(m.evaluate(px[i][e])) == 'True':
+                    xs.append(e)
+                    break
             for f in range(len(py[i])):
-                # print(py[i][f], m.evaluate(py[i][f]))
-                if str(m.evaluate(py[i][f])) == 'True': Y.append(f); break
-        # print(X)
-        # print(Y)
+                if str(m.evaluate(py[i][f])) == 'True':
+                    ys.append(f)
+                    break
 
-        for i, (x, y) in enumerate(zip(X, Y)):
+        for i, (x, y) in enumerate(zip(xs, ys)):
             circuits_pos.append((self.w[i], self.h[i], x, y))
-        # for k in range(self.circuits_num):
-        #     found = False
-        #     for x in range(self.max_width):
-        #         if found:
-        #             break
-        #         for y in range(plate_height):
-        #             if not found and m.evaluate(plate[x][y][k]):
-        #                 if not self.rotation:
-        #                     circuits_pos.append((self.w[k], self.h[k], x, y))
-        #                 else:
-        #                     if m.evaluate(rotations[k]):
-        #                         circuits_pos.append((self.h[k], self.w[k], x, y))
-        #                     else:
-        #                         circuits_pos.append((self.w[k], self.h[k], x, y))
-        #                 found = True
-        #             elif found:
-        #                 break
 
         return circuits_pos
