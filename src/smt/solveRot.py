@@ -79,10 +79,6 @@ class SMTsolverRot(SMTsolver):
                                 Sum(self.x_positions[i], self.w[i]) <= self.x_positions[j],
                                 Sum(self.x_positions[j], self.w[j]) <= self.x_positions[i]))
 
-                # symmetry breaking : fix relative position of the two biggest rectangles
-                self.sol.add(Or(self.x_positions[biggests[1]] > self.x_positions[biggests[0]],
-                                And(self.x_positions[biggests[1]] == self.x_positions[biggests[0]],
-                                    self.y_positions[biggests[1]] >= self.y_positions[biggests[0]])))
                 #
                 # # Two rectangles with same dimensions
                 # self.sol.add(Implies(And(self.w[i] == self.w[j], self.h[i] == self.h[j]),
@@ -100,6 +96,11 @@ class SMTsolverRot(SMTsolver):
                 #                      Or(Sum(self.x_positions[i], self.w[i]) <= self.x_positions[j],
                 #                         Sum(self.x_positions[j],
                 #                             self.w[j]) <= self.x_positions[i])))
+
+        # symmetry breaking : fix relative position of the two biggest rectangles
+        self.sol.add(Or(self.x_positions[biggests[1]] > self.x_positions[biggests[0]],
+                        And(self.x_positions[biggests[1]] == self.x_positions[biggests[0]],
+                            self.y_positions[biggests[1]] >= self.y_positions[biggests[0]])))
 
         # Cumulative over rows
         for u in range(plate_height):

@@ -1,19 +1,22 @@
 import os
+import re
 import subprocess
 import time
 
 import numpy as np
 
+from src.utils.utils import write_solution
+
 
 class SMTLIBsolver:
 
-    def __init__(self, data, output_dir, rotation=False, timeout=300):
+    def __init__(self, data, output_dir, timeout=300):
         self.data = data
-        self.rotation = rotation
         if output_dir == "":
             output_dir = "../data/output_smtlib/"
         self.output_dir = output_dir
-        os.makedirs(self.output_dir, exist_ok=True)
+        self.input_dir = "smt/input_smtlib/"
+        os.makedirs(self.input_dir, exist_ok=True)
         self.timeout = timeout
 
         self.circuits_num = None
@@ -25,30 +28,35 @@ class SMTLIBsolver:
         self.h = None
         self.w = None
         self.plate_height = None
+        self.file = None
 
     def solve(self):
+        solutions = []
         for d in self.data:
             ins_num = d[0]
-            print(f"Instance num: {ins_num}")
-            self.file = self.output_dir + "instance_" + str(ins_num) + ".smt2"
-            solution, time = self.solve_instance(d)
-            # write_solution(ins_num, solution[0], solution[1])
-            print(solution)
-            print(f"Time: {time}")
-            print(f"Height: {self.plate_height}")
-        return None
+            solutions.append(self.solve_instance(d, ins_num))
+        return solutions
 
-    def solve_instance(self, instance):
+    def solve_instance(self, instance, ins_num):
         _, self.max_width, self.circuits = instance
         self.circuits_num = len(self.circuits)
 
         self.w, self.h = ([i for i, _ in self.circuits], [j for _, j in self.circuits])
+        self.file = self.input_dir + "instance_" + str(ins_num) + ".smt2"
 
-        solution, solve_time = self.set_smtlib()
+        solution, spent_time = self.set_constraints(self.w, self.h)
 
-        return solution, solve_time
+        if solution is not None:
+            self.parse_solution(solution)
+            circuits_pos = self.evaluate()
+            write_solution(self.output_dir, ins_num, ((self.max_width, self.plate_height), circuits_pos),
+                           spent_time)
+            return ins_num, ((self.max_width, self.plate_height), circuits_pos), spent_time
+        else:
+            write_solution(self.output_dir, ins_num, None, 0)
+            return ins_num, None, 0
 
-    def set_smtlib(self):
+    def set_constraints(self, widths, heights):
 
         lower_bound = sum([self.h[i] * self.w[i] for i in range(self.circuits_num)]) // self.max_width
         upper_bound = sum(self.h) - min(self.h)
@@ -64,15 +72,14 @@ class SMTLIBsolver:
             lines = []
 
             lines.append(f"(set-option :timeout {self.timeout * 1000})")
-            lines.append("(set-logic QF_LIA)")
+            lines.append("(set-option :smt.threads 4)")
+            lines.append("(set-logic AUFLIA)")
 
             # Decision Variables
             for i in range(self.circuits_num):
                 lines.append(f"(declare-const x_{i} Int)")
                 lines.append(f"(declare-const y_{i} Int)")
 
-            # lines.append("(declare-fun x (Int) Int)")
-            # lines.append("(declare-fun y (Int) Int)")
 
             # Domain
             lines += [f"(assert (and (>= x_{i} 0) (<= x_{i} (- {self.max_width} {self.w[i]}))))" for i
@@ -114,10 +121,10 @@ class SMTLIBsolver:
             #     lines.append(
             #         f"(assert (>= {self.max_width} (+ {' '.join([f'(ite (and (<= y_{i} {u}) (< {u} (+ y_{i} {self.h[i]}))) {self.w[i]} 0)' for i in range(self.circuits_num)])})))")
             #
-            # # SUM OVER COLUMNS (CUMULATIVE)
-            # for u in range(self.max_width):
-            #     lines.append(
-            #         f"(assert (>= {self.plate_height} (+ {' '.join([f'(ite (and (<= x_{i} {u}) (< {u} (+ x_{i} {self.w[i]}))) {self.h[i]} 0)' for i in range(self.circuits_num)])})))")
+            # SUM OVER COLUMNS (CUMULATIVE)
+            for u in range(self.max_width):
+                lines.append(
+                    f"(assert (>= {self.plate_height} (+ {' '.join([f'(ite (and (<= x_{i} {u}) (< {u} (+ x_{i} {self.w[i]}))) {self.h[i]} 0)' for i in range(self.circuits_num)])})))")
 
             # Result
             lines.append("(check-sat)")
@@ -137,7 +144,25 @@ class SMTLIBsolver:
 
             solution = output.decode('ascii')
 
-            if solution.split("\r")[0] == 'sat' or time_spent > 300:
-                break
+            if solution.split("\r")[0] == 'sat':
+                return solution, time_spent
 
-        return solution, time_spent
+            if solution.split("\r")[0] != 'sat' or time_spent >= 300:
+                return None, time_spent
+
+    def parse_solution(self, solution):
+        text = solution.split("\r")
+        sat = re.compile(r'sat')
+        text = [i for i in text if not sat.match(i)]
+        text = [re.sub("\n", '', text[i]) for i in range(len(text))]
+        text = [i for i in text if i != '']
+        for i in range(len(text)):
+            text[i] = re.sub("\(|\)", '', text[i])
+            text[i] = text[i].split(" ")
+            text[i] = [j for j in text[i] if j != '']
+
+        self.x_positions = [int(text[i][1]) for i in range(self.circuits_num * 2) if i % 2 == 0]
+        self.y_positions = [int(text[i][1]) for i in range(self.circuits_num * 2) if i % 2 == 1]
+
+    def evaluate(self):
+        return [(self.w[i], self.h[i], self.x_positions[i], self.y_positions[i]) for i in range(self.circuits_num)]

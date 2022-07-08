@@ -6,6 +6,8 @@ from sat.solve import SATsolver
 from src.smt.solve import SMTsolver
 from src.smt.solveOMT import OMTsolver
 from src.smt.solveRot import SMTsolverRot
+from src.smt.solveSMTLIB import SMTLIBsolver
+from src.smt.solveSMTLIBRot import SMTLIBsolverRot
 from utils.utils import load_data, display_solution, plot_times
 
 
@@ -44,6 +46,11 @@ def main():
             solver = SMTsolverRot(data=data, output_dir=args.output_dir, timeout=int(args.timeout))
         else:
             solver = SMTsolver(data=data, output_dir=args.output_dir, timeout=int(args.timeout))
+    elif args.solver == "smtlib":
+        if args.rotation:
+            solver = SMTLIBsolverRot(data=data, output_dir=args.output_dir, timeout=int(args.timeout))
+        else:
+            solver = SMTLIBsolver(data=data, output_dir=args.output_dir, timeout=int(args.timeout))
     elif args.solver == "omt":
         solver = OMTsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=int(args.timeout))
     elif args.solver == "lp":
