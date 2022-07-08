@@ -63,9 +63,10 @@ def main():
 
     if args.visualize:
         for sol in solutions:
-            circuits = [(w, h) for (w, h, _, _) in sol[1][1]]
-            circuits_pos = [(x, y) for (_, _, x, y) in sol[1][1]]
-            display_solution(f'ins-{sol[0]}', (sol[1][0][0], sol[1][0][1]), len(sol[1][1]), circuits, circuits_pos)
+            if sol[1] != None:
+                circuits = [(w, h) for (w, h, _, _) in sol[1][1]]
+                circuits_pos = [(x, y) for (_, _, x, y) in sol[1][1]]
+                display_solution(f'ins-{sol[0]}', (sol[1][0][0], sol[1][0][1]), len(sol[1][1]), circuits, circuits_pos)
     if args.plot:
         plot_times(solver.output_dir)
 
