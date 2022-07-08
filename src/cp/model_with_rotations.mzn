@@ -1,5 +1,5 @@
 include "globals.mzn";
-%mzn_ignore_symmetry_breaking_constraints=true
+include "lex_lesseq.mzn"; 
 
 int: W; % maximum width
 int: N; % number of blocks
@@ -25,7 +25,9 @@ array[CIRCUITS] of var 0..max_X: coords_x;
 array[CIRCUITS] of var 0..max_Y: coords_y;
 
 % only the right box can't be bigger than the maximum width W.
-constraint  max([coords_x[i] + shape_x_r[i] | i in CIRCUITS]) <= W;
+constraint forall(i in CIRCUITS)(W >= coords_x[i] + shape_x_r[i]);
+% the total height should be as low as possible. 
+constraint forall(i in CIRCUITS)(H >= coords_y[i] + shape_y_r[i]);
                  
 % Global constraint for no overlapping rectangles.
 constraint diffn(
@@ -34,8 +36,7 @@ constraint diffn(
   shape_x_r,
   shape_y_r);
   
-include "lex_lesseq.mzn"; 
-% MAXIMUM EFFECTIVE WIDTH
+% Maximum effective width
 var int: W_E = max([coords_x[i] + shape_x_r[i] | i in CIRCUITS]);
 
 constraint forall(i in CIRCUITS)(heights[i] > W -> rotation[i]==false);
@@ -45,9 +46,9 @@ constraint forall(i in CIRCUITS)(heights[i] > W -> rotation[i]==false);
 %  lex_lesseq(coords_y, [H - coords_y[i] - shape_y_r[i] | i in CIRCUITS])
 %);
 
-%constraint symmetry_breaking_constraint(
-%  lex_lesseq(coords_x, [W_E - coords_x[i] - shape_x_r[i] | i in CIRCUITS])
-%);
+constraint symmetry_breaking_constraint(
+  lex_lesseq(coords_x, [W_E - coords_x[i] - shape_x_r[i] | i in CIRCUITS])
+);
 
 % square rotation constraint
 constraint symmetry_breaking_constraint(
@@ -56,10 +57,7 @@ constraint symmetry_breaking_constraint(
 
 % Cumulative constraint
 constraint cumulative(coords_y, shape_y_r, shape_x_r, W);
-constraint cumulative(coords_x, shape_x_r, shape_y_r, H);
-
-% the total height should be as low as possible. 
-constraint forall(i in CIRCUITS) (H >= coords_y[i] + shape_y_r[i]);
+%constraint cumulative(coords_x, shape_x_r, shape_y_r, H);
 
 solve 
   :: int_search([H], input_order, indomain_min)
