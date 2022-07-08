@@ -41,13 +41,13 @@ var int: W_E = max([coords_x[i] + shape_x_r[i] | i in CIRCUITS]);
 constraint forall(i in CIRCUITS)(heights[i] > W -> rotation[i]==false);
 
 % breaking symmetries.
-constraint symmetry_breaking_constraint(
-  lex_lesseq(coords_y, [H - coords_y[i] - shape_y_r[i] | i in CIRCUITS])
-);
+%constraint symmetry_breaking_constraint(
+%  lex_lesseq(coords_y, [H - coords_y[i] - shape_y_r[i] | i in CIRCUITS])
+%);
 
-constraint symmetry_breaking_constraint(
-  lex_lesseq(coords_x, [W_E - coords_x[i] - shape_x_r[i] | i in CIRCUITS])
-);
+%constraint symmetry_breaking_constraint(
+%  lex_lesseq(coords_x, [W_E - coords_x[i] - shape_x_r[i] | i in CIRCUITS])
+%);
 
 % square rotation constraint
 constraint symmetry_breaking_constraint(
@@ -56,7 +56,7 @@ constraint symmetry_breaking_constraint(
 
 % Cumulative constraint
 constraint cumulative(coords_y, shape_y_r, shape_x_r, W);
-%constraint cumulative(coords_x, shape_x_r, shape_y_r, H);
+constraint cumulative(coords_x, shape_x_r, shape_y_r, H);
 
 % the total height should be as low as possible. 
 constraint forall(i in CIRCUITS) (H >= coords_y[i] + shape_y_r[i]);

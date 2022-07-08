@@ -75,46 +75,46 @@ class LPsolver:
                 for i in range(self.circuits_num)]
             M = 1000
             for i in range(self.circuits_num):
-                # basic constraints of containment
+                # domain constraints
                 solver.Add(x[i] + widths[i] <= self.max_width)
                 solver.Add(y[i] + heights[i] <= max_h)
                 # non overlapping constraints
                 for j in range(i + 1, self.circuits_num):
-                    solver.Add(sum(d[i][j]) == 1)
+                    solver.Add(sum(d[i][j]) >= 1)
                     solver.Add(x[i] + widths[i] <= x[j] + M * (1 - d[i][j][0]))
                     solver.Add(x[j] + widths[j] <= x[i] + M * (1 - d[i][j][1]))
                     solver.Add(y[i] + heights[i] <= y[j] + M * (1 - d[i][j][2]))
                     solver.Add(y[j] + heights[j] <= y[i] + M * (1 - d[i][j][3]))
 
-            # cumulative constraint over rows
-            c_w = [[solver.IntVar(lb=0, ub=max(w), name=f'cw_{i}_{u}') for u in range(max_h)] for i in
-                   range(self.circuits_num)]
-            delta = [[solver.IntVar(lb=0, ub=1, name=f'delta_{i}_{u}') for u in range(max_h)] for i in
-                     range(self.circuits_num)]
-            delta2 = [[solver.IntVar(lb=0, ub=1, name=f'delta_{i}_{u}') for u in range(max_h)] for i in
-                      range(self.circuits_num)]
-            delta3 = [[solver.IntVar(lb=0, ub=1, name=f'delta_{i}_{u}') for u in range(max_h)] for i in
-                      range(self.circuits_num)]
-
-            for i in range(self.circuits_num):
-                for u in range(max_h):
-                    solver.Add(u <= (y[i] + heights[i]) + M * delta[i][u])
-                    solver.Add(u >= (y[i] + heights[i]) - M * (1 - delta[i][u]))
-                    solver.Add(y[i] <= u + M * delta2[i][u])
-                    solver.Add(y[i] >= u - M * (1 - delta2[i][u]))
-                    # delta3 = delta \/ delta2
-                    solver.Add(delta3[i][u] <= delta[i][u] + delta2[i][u])
-                    solver.Add(delta3[i][u] >= delta[i][u])
-                    solver.Add(delta3[i][u] >= delta2[i][u])
-
-                    # c_w[i][u] = widths[i] if block i occupies a row at height u, otherwise is 0
-                    solver.Add(widths[i] - M * delta3[i][u] <= c_w[i][u])
-                    solver.Add(c_w[i][u] <= widths[i] + M * delta3[i][u])
-                    solver.Add(-M * (1 - delta3[i][u]) <= c_w[i][u])
-                    solver.Add(c_w[i][u] <= M * (1 - delta3[i][u]))
-
-            for u in range(max_h):
-                solver.Add(self.max_width >= sum([c_w[i][u] for i in range(self.circuits_num)]))
+            # # cumulative constraint over rows
+            # c_w = [[solver.IntVar(lb=0, ub=max(w), name=f'cw_{i}_{u}') for u in range(max_h)] for i in
+            #        range(self.circuits_num)]
+            # delta = [[solver.IntVar(lb=0, ub=1, name=f'delta_{i}_{u}') for u in range(max_h)] for i in
+            #          range(self.circuits_num)]
+            # delta2 = [[solver.IntVar(lb=0, ub=1, name=f'delta_{i}_{u}') for u in range(max_h)] for i in
+            #           range(self.circuits_num)]
+            # delta3 = [[solver.IntVar(lb=0, ub=1, name=f'delta_{i}_{u}') for u in range(max_h)] for i in
+            #           range(self.circuits_num)]
+            #
+            # for i in range(self.circuits_num):
+            #     for u in range(max_h):
+            #         solver.Add(u <= (y[i] + heights[i]) + M * delta[i][u])
+            #         solver.Add(u >= (y[i] + heights[i]) - M * (1 - delta[i][u]))
+            #         solver.Add(y[i] <= u + M * delta2[i][u])
+            #         solver.Add(y[i] >= u - M * (1 - delta2[i][u]))
+            #         # delta3 = delta \/ delta2
+            #         solver.Add(delta3[i][u] <= delta[i][u] + delta2[i][u])
+            #         solver.Add(delta3[i][u] >= delta[i][u])
+            #         solver.Add(delta3[i][u] >= delta2[i][u])
+            #
+            #         # c_w[i][u] = widths[i] if block i occupies a row at height u, otherwise is 0
+            #         solver.Add(widths[i] - M * delta3[i][u] <= c_w[i][u])
+            #         solver.Add(c_w[i][u] <= widths[i] + M * delta3[i][u])
+            #         solver.Add(-M * (1 - delta3[i][u]) <= c_w[i][u])
+            #         solver.Add(c_w[i][u] <= M * (1 - delta3[i][u]))
+            #
+            # for u in range(max_h):
+            #     solver.Add(self.max_width >= sum([c_w[i][u] for i in range(self.circuits_num)]))
 
             # print('Instantiation time: ', (time.time() - start))
             status = solver.Solve()

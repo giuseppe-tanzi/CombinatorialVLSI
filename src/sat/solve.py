@@ -106,22 +106,22 @@ class SATsolver:
         for i in range(0, self.circuits_num):
             for j in range(0, self.circuits_num):
                 if i < j:
-                    if len(px[j]) - 1 >= self.w[i] - 1:
+                    if len(px[j]) >= self.w[i]:
                         self.sol.add(Or(Not(lr[i][j]), Not(px[j][self.w[i] - 1])))
                     else:
-                        self.sol.add(Or(Not(lr[i][j]), Not(px[j][len(px[j]) - 1])))
-                    if len(px[i]) - 1 >= self.w[j] - 1:
+                        self.sol.add(Or(Not(lr[i][j]), Not(px[j][-1])))
+                    if len(px[i]) >= self.w[j]:
                         self.sol.add(Or(Not(lr[j][i]), Not(px[i][self.w[j] - 1])))
                     else:
-                        self.sol.add(Or(Not(lr[j][i]), Not(px[i][len(px[i]) - 1])))
-                    if len(py[j]) - 1 >= self.h[i] - 1:
+                        self.sol.add(Or(Not(lr[j][i]), Not(px[i][-1])))
+                    if len(py[j]) >= self.h[i]:
                         self.sol.add(Or(Not(ud[i][j]), Not(py[j][self.h[i] - 1])))
                     else:
-                        self.sol.add(Or(Not(ud[i][j]), Not(py[j][len(py[j]) - 1])))
-                    if len(py[i]) - 1 >= self.h[j] - 1:
+                        self.sol.add(Or(Not(ud[i][j]), Not(py[j][-1])))
+                    if len(py[i]) >= self.h[j]:
                         self.sol.add(Or(Not(ud[j][i]), Not(py[i][self.h[j] - 1])))
                     else:
-                        self.sol.add(Or(Not(ud[j][i]), Not(py[i][len(py[i]) - 1])))
+                        self.sol.add(Or(Not(ud[j][i]), Not(py[i][-1])))
 
                     self.sol.add(Or(lr[i][j], lr[j][i], ud[i][j], ud[j][i]))
 

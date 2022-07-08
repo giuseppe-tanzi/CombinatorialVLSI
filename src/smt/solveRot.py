@@ -24,7 +24,7 @@ class SMTsolverRot(SMTsolver):
         upper_bound = sum(heights) - min(heights)
 
         for plate_height in range(lower_bound, upper_bound + 1):
-            self.sol = Tactic('qflra').solver()
+            self.sol = Tactic('auflia').solver()
             self.sol.set(timeout=self.timeout * 1000)
             self.sol.set(threads=4)
 
