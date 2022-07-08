@@ -35,7 +35,7 @@ def main():
     if args.plot:
         data = []
     else:
-        data = load_data(args.num_instance, args.input_dir)[:25]
+        data = load_data(args.num_instance, args.input_dir)
     print(data)
     if args.solver == "cp":
         solver = CPsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=int(args.timeout))
