@@ -76,6 +76,7 @@ def plot_times(output_dir):
     plt.xlabel('Instance')
     plt.ylabel('Time (s)')
     plt.yscale("log")
+    plt.ylim(0,300)
     plt.savefig(os.path.join(output_dir, "times_plot.png"))
     plt.show()
 
