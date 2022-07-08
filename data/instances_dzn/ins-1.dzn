@@ -6,3 +6,11 @@ shapes =
    | 5, 3
    | 5, 5
    |];
+
+constraint forall(i in 1..h)(
+              forall(j in 1..w)(
+                if (map[i+1,j] >= map[i,j] /\ map[i-1, j] >= map[i, j] /\ map[i, j+1] >= map[i,j] /\ map[i, j-1] >= map[i,j]
+                    /\ mask[i+1,j] == 0 /\ mask[i-1,j] == 0 /\ mask[i,j+1] == 0 /\ mask[i, j-1] == 0)
+                then mask[i,j] = 1 endif
+               )
+              );
