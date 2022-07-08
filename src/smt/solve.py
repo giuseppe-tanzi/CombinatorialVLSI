@@ -115,16 +115,16 @@ class SMTsolver:
                 #                         Sum(self.x_positions[j],
                 #                             self.w[j]) <= self.x_positions[i])))
 
-        # Cumulative over rows
-        for u in range(plate_height):
-            self.sol.add(
-                self.max_width >= Sum([If(And(self.y_positions[i] <= u, u < Sum(self.y_positions[i], self.h[i])),
-                                          self.w[i], 0) for i in range(self.circuits_num)]))
-        #
-        # # Cumulative over columns
-        # for u in range(self.max_width):
-        #     self.sol.add(plate_height >= Sum([If(And(self.x_positions[i] <= u, u < Sum(self.x_positions[i], self.w[i])),
-        #                                          self.h[i], 0) for i in range(self.circuits_num)]))
+        # # Cumulative over rows
+        # for u in range(plate_height):
+        #     self.sol.add(
+        #         self.max_width >= Sum([If(And(self.y_positions[i] <= u, u < Sum(self.y_positions[i], self.h[i])),
+        #                                   self.w[i], 0) for i in range(self.circuits_num)]))
+
+        # Cumulative over columns
+        for u in range(self.max_width):
+            self.sol.add(plate_height >= Sum([If(And(self.x_positions[i] <= u, u < Sum(self.x_positions[i], self.w[i])),
+                                                 self.h[i], 0) for i in range(self.circuits_num)]))
 
     def evaluate(self):
         x = [int(self.sol.model().evaluate(self.x_positions[i]).as_string()) for i in range(self.circuits_num)]
