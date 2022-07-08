@@ -15,8 +15,8 @@ class SMTLIBsolver:
         if output_dir == "":
             output_dir = "../data/output_smtlib/"
         self.output_dir = output_dir
-        self.input_dir = "smt/input_smtlib/"
-        os.makedirs(self.input_dir, exist_ok=True)
+        self.instances_dir = "smt/instances_smtlib/"
+        os.makedirs(self.instances_dir, exist_ok=True)
         self.timeout = timeout
 
         self.circuits_num = None
@@ -42,7 +42,7 @@ class SMTLIBsolver:
         self.circuits_num = len(self.circuits)
 
         self.w, self.h = ([i for i, _ in self.circuits], [j for _, j in self.circuits])
-        self.file = self.input_dir + "instance_" + str(ins_num) + ".smt2"
+        self.file = self.instances_dir + "ins-" + str(ins_num) + ".smt2"
 
         solution, spent_time = self.set_constraints(self.w, self.h)
 
