@@ -6,7 +6,7 @@ import numpy as np
 
 
 def write_solution(output_dir, n, solution, stat):
-    # TODO : Scrivere la parte di salvataggio su file di questi risultati.
+    """Prints the solution to console and write it in a txt file"""
     print(f'{n})', solution, stat)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, f"ins_{n}.txt")
@@ -23,6 +23,11 @@ def write_solution(output_dir, n, solution, stat):
 
 
 def load_instance(filename):
+    """Loads a single instance from txt file
+        :returns num_ins : instance number
+                 width : max width allowed
+                 circuits : array of tuples (w , h) for each circuit
+    """
     with open(filename, 'r') as instance:
         num_ins = filename[filename.find("ins-") + 4:filename.find(".txt")]
         width = int(instance.readline().strip())
@@ -45,7 +50,9 @@ def load_data(num_instance, input_dir):
         return [load_instance(filename=filename) for filename in all_instances if
                 int(filename[filename.find("ins-") + 4:filename.find(".txt")]) == num_instance]
 
+
 def display_solution(title, sizes_plate, n_circuits, sizes_circuits, pos_circuits):
+    """Displays a solution using a plot"""
     fig, ax = plt.subplots()
     cmap = plt.cm.get_cmap('hsv', n_circuits)
     ax = plt.gca()
@@ -63,27 +70,21 @@ def display_solution(title, sizes_plate, n_circuits, sizes_circuits, pos_circuit
 
     plt.show()
 
+
 def plot_times(output_dir):
+    """Plot the barplot of the solving times taken from the solved instance results in output_dir"""
     solutions_paths = glob(
         os.path.join(output_dir, "*.txt"))
     times = np.zeros(40)
-    for i in range(1,41):
+    for i in range(1, 41):
         for path in solutions_paths:
             if int(path[path.find("ins_") + 4:path.find(".txt")]) == i:
                 with open(path, 'r') as f:
-                    times[i-1] = float(f.readlines()[-1])
-    plt.bar(x = np.arange(1, len(times) + 1), height = times)
+                    times[i - 1] = float(f.readlines()[-1])
+    plt.bar(x=np.arange(1, len(times) + 1), height=times)
     plt.xlabel('Instance')
     plt.ylabel('Time (s)')
     plt.yscale("log")
-    plt.ylim(0,300)
+    plt.ylim(0, 300)
     plt.savefig(os.path.join(output_dir, "times_plot.png"))
     plt.show()
-
-
-solutions_paths = glob(os.path.join("C:\\Users\\pallo\\PycharmProjects\\CombinatorialVLSI\\src\\lp\\output_lp", "*.txt"))
-
-for path in solutions_paths:
-    with open(path, 'r') as f:
-        print(float(f.readlines()[-1]))
-    break
