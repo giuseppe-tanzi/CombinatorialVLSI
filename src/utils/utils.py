@@ -8,10 +8,10 @@ import numpy as np
 def write_solution(output_dir, n, solution, stat):
     """Prints the solution to console and write it in a txt file"""
     print(f'{n})', solution, stat)
-    os.makedirs(output_dir, exist_ok=True)
-    filename = os.path.join(output_dir, f"ins_{n}.txt")
-    with open(filename, 'w') as sol:
-        if solution != None:
+    if solution != None:
+        os.makedirs(output_dir, exist_ok=True)
+        filename = os.path.join(output_dir, f"ins_{n}.txt")
+        with open(filename, 'w') as sol:
             (plate_width, plate_height), circuits_pos = solution
             sol.write("{0} {1}\n".format(plate_width, plate_height))
             sol.write("{0}\n".format(len(circuits_pos)))
