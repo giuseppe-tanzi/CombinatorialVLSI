@@ -7,6 +7,7 @@ from src.smt.solve import SMTsolver
 from src.smt.solveOMT import OMTsolver
 from src.smt.solveRot import SMTsolverRot
 from src.smt.solveSMTLIB import SMTLIBsolver
+from src.smt.solveSMTLIBRot import SMTLIBsolverRot
 from utils.utils import load_data, display_solution, plot_times
 
 
