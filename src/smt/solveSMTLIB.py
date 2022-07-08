@@ -10,9 +10,8 @@ from src.utils.utils import write_solution
 
 class SMTLIBsolver:
 
-    def __init__(self, data, output_dir, rotation=False, timeout=300):
+    def __init__(self, data, output_dir, timeout=300):
         self.data = data
-        self.rotation = rotation
         if output_dir == "":
             output_dir = "../data/output_smtlib/"
         self.output_dir = output_dir
@@ -74,15 +73,13 @@ class SMTLIBsolver:
 
             lines.append(f"(set-option :timeout {self.timeout * 1000})")
             lines.append("(set-option :smt.threads 4)")
-            lines.append("(set-logic QF_LIA)")
+            lines.append("(set-logic AUFLIA)")
 
             # Decision Variables
             for i in range(self.circuits_num):
                 lines.append(f"(declare-const x_{i} Int)")
                 lines.append(f"(declare-const y_{i} Int)")
 
-            # lines.append("(declare-fun x (Int) Int)")
-            # lines.append("(declare-fun y (Int) Int)")
 
             # Domain
             lines += [f"(assert (and (>= x_{i} 0) (<= x_{i} (- {self.max_width} {self.w[i]}))))" for i
@@ -124,10 +121,10 @@ class SMTLIBsolver:
             #     lines.append(
             #         f"(assert (>= {self.max_width} (+ {' '.join([f'(ite (and (<= y_{i} {u}) (< {u} (+ y_{i} {self.h[i]}))) {self.w[i]} 0)' for i in range(self.circuits_num)])})))")
             #
-            # # SUM OVER COLUMNS (CUMULATIVE)
-            # for u in range(self.max_width):
-            #     lines.append(
-            #         f"(assert (>= {self.plate_height} (+ {' '.join([f'(ite (and (<= x_{i} {u}) (< {u} (+ x_{i} {self.w[i]}))) {self.h[i]} 0)' for i in range(self.circuits_num)])})))")
+            # SUM OVER COLUMNS (CUMULATIVE)
+            for u in range(self.max_width):
+                lines.append(
+                    f"(assert (>= {self.plate_height} (+ {' '.join([f'(ite (and (<= x_{i} {u}) (< {u} (+ x_{i} {self.w[i]}))) {self.h[i]} 0)' for i in range(self.circuits_num)])})))")
 
             # Result
             lines.append("(check-sat)")
@@ -151,7 +148,6 @@ class SMTLIBsolver:
             time_spent = time.time() - start_time
 
             solution = output.decode('ascii')
-            print(solution)
 
             if solution.split("\r")[0] == 'sat':
                 return solution, time_spent
