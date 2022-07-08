@@ -73,6 +73,7 @@ class SMTLIBsolver:
             lines = []
 
             lines.append(f"(set-option :timeout {self.timeout * 1000})")
+            lines.append("(set-option :smt.threads 4)")
             lines.append("(set-logic QF_LIA)")
 
             # Decision Variables
@@ -138,6 +139,11 @@ class SMTLIBsolver:
                 for line in lines:
                     f.write(line + "\n")
 
+            # thread = "z3 parallel.enable=true parallel.threads.max=4 solve.z3"
+            # thread_process = subprocess.Popen(thread.split(), stdout=subprocess.PIPE)
+            # thread_out, _ = thread_process.communicate()
+            # print(thread_out)
+
             bashCommand = f"z3 -smt2 {self.file}"
             process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
             start_time = time.time()
@@ -145,6 +151,7 @@ class SMTLIBsolver:
             time_spent = time.time() - start_time
 
             solution = output.decode('ascii')
+            print(solution)
 
             if solution.split("\r")[0] == 'sat':
                 return solution, time_spent
