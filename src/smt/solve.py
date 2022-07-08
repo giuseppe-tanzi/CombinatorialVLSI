@@ -44,11 +44,11 @@ class SMTsolver:
         upper_bound = sum(self.h) - min(self.h)
 
         for plate_height in range(lower_bound, upper_bound + 1):
-            self.sol = Tactic('qflra').solver()
+            self.sol = Tactic('auflia').solver()
             self.sol.set(timeout=self.timeout * 1000)
             self.sol.set(threads=4)
 
-            self.set_constraints(plate_height)
+            self.set_constraints(plate_height, self.w, self.h)
 
             solve_time = time.time()
             if self.sol.check() == sat:
@@ -64,7 +64,7 @@ class SMTsolver:
                     return ins_num, None, 0
         return ins_num, None, 0
 
-    def set_constraints(self, plate_height):
+    def set_constraints(self, plate_height, widths, heights):
 
         self.x_positions = IntVector('x_pos', self.circuits_num)
         self.y_positions = IntVector('y_pos', self.circuits_num)
@@ -121,10 +121,10 @@ class SMTsolver:
         #         self.max_width >= Sum([If(And(self.y_positions[i] <= u, u < Sum(self.y_positions[i], self.h[i])),
         #                                   self.w[i], 0) for i in range(self.circuits_num)]))
         #
-        # # Cumulative over columns
-        # for u in range(self.max_width):
-        #     self.sol.add(plate_height >= Sum([If(And(self.x_positions[i] <= u, u < Sum(self.x_positions[i], self.w[i])),
-        #                                          self.h[i], 0) for i in range(self.circuits_num)]))
+        # Cumulative over columns
+        for u in range(self.max_width):
+            self.sol.add(plate_height >= Sum([If(And(self.x_positions[i] <= u, u < Sum(self.x_positions[i], self.w[i])),
+                                                 self.h[i], 0) for i in range(self.circuits_num)]))
 
     def evaluate(self):
         x = [int(self.sol.model().evaluate(self.x_positions[i]).as_string()) for i in range(self.circuits_num)]
