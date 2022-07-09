@@ -39,8 +39,8 @@ class LPsolverRot(LPsolver):
         for i in range(self.circuits_num):
             widths.append(solver.IntVar(lb=min(w), ub=max(w), name=f'widths_{i}'))
             heights.append(solver.IntVar(lb=min(h), ub=max(h), name=f'heights_{i}'))
-            x.append(solver.IntVar(lb=0, name=f'x_{i}'))
-            y.append(solver.IntVar(lb=0, name=f'y_{i}'))
+            x.append(solver.IntVar(lb=0, ub=max(w), name=f'x_{i}'))
+            y.append(solver.IntVar(lb=0, ub=max(h), name=f'y_{i}'))
 
         rot = []
         for i in range(self.circuits_num):
