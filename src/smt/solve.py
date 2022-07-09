@@ -2,7 +2,7 @@ import time
 
 import numpy as np
 from utils.utils import write_solution
-from z3 import And, Or, sat, Sum, IntVector, Tactic, Implies
+from z3 import And, Or, sat, Sum, IntVector, Tactic, Implies, If
 
 
 class SMTsolver:
