@@ -6,9 +6,9 @@ from lp.solve_rot_optimize import LPsolverRot
 from sat.solve import SATsolver
 from src.smt.solve import SMTsolver
 from src.smt.solveOMT import OMTsolver
-from src.smt.solveRot import SMTsolverRot
-from src.smt.solveSMTLIB import SMTLIBsolver
-from src.smt.solveSMTLIBRot import SMTLIBsolverRot
+from src.smt.solve_rotation import SMTsolverRot
+from src.smt.solve_smtlib import SMTLIBsolver
+from src.smt.solve_smtlib_rotation import SMTLIBsolverRot
 from utils.utils import load_data, display_solution, plot_times
 
 
@@ -29,6 +29,7 @@ def main():
     parser.add_argument("-v", "--visualize", help="Enable solution visualization", default=False, type=bool)
     parser.add_argument("-t", "--timeout", help="Timeout in seconds", default=300)
     parser.add_argument("-p", "--plot", help="Plot of solving times", default=False)
+    parser.add_argument("-sol", "--solsmtlib", help="Solver used for SMTLib", default="z3", type=str)
     args = parser.parse_args()
     print(args)
 
@@ -51,7 +52,8 @@ def main():
         if args.rotation:
             solver = SMTLIBsolverRot(data=data, output_dir=args.output_dir, timeout=int(args.timeout))
         else:
-            solver = SMTLIBsolver(data=data, output_dir=args.output_dir, timeout=int(args.timeout))
+            solver = SMTLIBsolver(data=data, output_dir=args.output_dir, timeout=int(args.timeout),
+                                  solver=args.solsmtlib)
     elif args.solver == "omt":
         solver = OMTsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=int(args.timeout))
     elif args.solver == "lp":

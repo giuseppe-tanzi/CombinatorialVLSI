@@ -10,7 +10,7 @@ from src.utils.utils import write_solution
 
 class SMTLIBsolver:
 
-    def __init__(self, data, output_dir, timeout=300):
+    def __init__(self, data, output_dir, timeout, solver):
         self.data = data
         if output_dir == "":
             output_dir = "../data/output_smtlib/"
@@ -29,6 +29,7 @@ class SMTLIBsolver:
         self.w = None
         self.plate_height = None
         self.file = None
+        self.solver = solver
 
     def solve(self):
         solutions = []
@@ -71,15 +72,18 @@ class SMTLIBsolver:
         for self.plate_height in range(lower_bound, upper_bound):
             lines = []
 
-            lines.append(f"(set-option :timeout {self.timeout * 1000})")
-            lines.append("(set-option :smt.threads 4)")
+            if self.solver == 'z3':
+                lines.append(f"(set-option :timeout {self.timeout * 1000})")
+                lines.append("(set-option :smt.threads 4)")
+            elif self.solver == 'cvc5':
+                lines.append(f"(set-option :produce-models true)")
+
             lines.append("(set-logic AUFLIA)")
 
             # Decision Variables
             for i in range(self.circuits_num):
                 lines.append(f"(declare-const x_{i} Int)")
                 lines.append(f"(declare-const y_{i} Int)")
-
 
             # Domain
             lines += [f"(assert (and (>= x_{i} 0) (<= x_{i} (- {self.max_width} {self.w[i]}))))" for i
@@ -136,7 +140,12 @@ class SMTLIBsolver:
                 for line in lines:
                     f.write(line + "\n")
 
-            bashCommand = f"z3 -smt2 {self.file}"
+            if self.solver == 'z3':
+                bashCommand = f"z3 -smt2 {self.file}"
+            elif self.solver == 'cvc5':
+                bashCommand = f"cvc5 {self.file} --tlimit-per {self.timeout * 1000}"
+            else:
+                return None, 0
             process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
             start_time = time.time()
             output, _ = process.communicate()
@@ -151,18 +160,31 @@ class SMTLIBsolver:
                 return None, time_spent
 
     def parse_solution(self, solution):
-        text = solution.split("\r")
-        sat = re.compile(r'sat')
-        text = [i for i in text if not sat.match(i)]
-        text = [re.sub("\n", '', text[i]) for i in range(len(text))]
-        text = [i for i in text if i != '']
-        for i in range(len(text)):
-            text[i] = re.sub("\(|\)", '', text[i])
-            text[i] = text[i].split(" ")
-            text[i] = [j for j in text[i] if j != '']
+        if self.solver == 'z3':
+            text = solution.split("\r")
+            sat = re.compile(r'sat')
+            text = [i for i in text if not sat.match(i)]
+            text = [re.sub("\n", '', text[i]) for i in range(len(text))]
+            text = [i for i in text if i != '']
+            for i in range(len(text)):
+                text[i] = re.sub("\(|\)", '', text[i])
+                text[i] = text[i].split(" ")
+                text[i] = [j for j in text[i] if j != '']
 
-        self.x_positions = [int(text[i][1]) for i in range(self.circuits_num * 2) if i % 2 == 0]
-        self.y_positions = [int(text[i][1]) for i in range(self.circuits_num * 2) if i % 2 == 1]
+            self.x_positions = [int(text[i][1]) for i in range(self.circuits_num * 2) if i % 2 == 0]
+            self.y_positions = [int(text[i][1]) for i in range(self.circuits_num * 2) if i % 2 == 1]
+        elif self.solver == 'cvc5':
+            text = solution.split("\n")
+            text = [i for i in text if i != '']
+            text = text[1:]
+            for i in range(len(text)):
+                text[i] = re.sub("\r", "", text[i])
+                text[i] = re.sub("\(|\)", '', text[i])
+                text[i] = text[i].split(" ")
+            text = text[0]
+
+            self.x_positions = [int(text[i]) for i in range(self.circuits_num * 4) if i % 4 == 1]
+            self.y_positions = [int(text[i]) for i in range(self.circuits_num * 4) if i % 4 == 3]
 
     def evaluate(self):
         return [(self.w[i], self.h[i], self.x_positions[i], self.y_positions[i]) for i in range(self.circuits_num)]
