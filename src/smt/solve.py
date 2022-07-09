@@ -2,12 +2,12 @@ import time
 
 import numpy as np
 from utils.utils import write_solution
-from z3 import And, Or, sat, Sum, IntVector, Implies, Tactic, If
+from z3 import And, Or, sat, Sum, IntVector, Tactic
 
 
 class SMTsolver:
 
-    def __init__(self, data, output_dir, timeout=300):
+    def __init__(self, data, output_dir, timeout):
         self.data = data
         if output_dir == "":
             output_dir = "../data/output_smt/"
@@ -25,7 +25,7 @@ class SMTsolver:
 
     def solve(self):
         solutions = []
-        for d in self.data:
+        for d in self.data[29:]:
             ins_num = d[0]
             solutions.append(self.solve_instance(d, ins_num))
         return solutions
@@ -93,12 +93,7 @@ class SMTsolver:
                                 Sum(self.x_positions[i], self.w[i]) <= self.x_positions[j],
                                 Sum(self.x_positions[j], self.w[j]) <= self.x_positions[i]))
 
-                # # symmetry breaking : fix relative position of the two biggest rectangles
-                # self.sol.add(Or(self.x_positions[biggests[1]] > self.x_positions[biggests[0]],
-                #                 And(self.x_positions[biggests[1]] == self.x_positions[biggests[0]],
-                #                     self.y_positions[biggests[1]] >= self.y_positions[biggests[0]])))
-
-                # Two rectangles with same dimensions
+                # Breaking symmetry: two rectangles with same dimensions
                 # self.sol.add(Implies(And(self.w[i] == self.w[j], self.h[i] == self.h[j]),
                 #                      Or(self.x_positions[j] > self.x_positions[i],
                 #                         And(self.x_positions[j] == self.x_positions[i],
@@ -108,12 +103,17 @@ class SMTsolver:
                 # self.sol.add(Implies(Sum(self.w[i], self.w[j]) > self.max_width,
                 #                      Or(Sum(self.y_positions[i], self.h[i]) <= self.y_positions[j],
                 #                         Sum(self.y_positions[j], self.h[j]) <= self.y_positions[i])))
-                #
+                # #
                 # # If two rectangles cannot be packed one over the other along the y axis
                 # self.sol.add(Implies(Sum(self.h[i], self.h[j]) > plate_height,
                 #                      Or(Sum(self.x_positions[i], self.w[i]) <= self.x_positions[j],
                 #                         Sum(self.x_positions[j],
                 #                             self.w[j]) <= self.x_positions[i])))
+
+        # # symmetry breaking : fix relative position of the two biggest rectangles
+        # self.sol.add(Or(self.x_positions[biggests[1]] > self.x_positions[biggests[0]],
+        #                 And(self.x_positions[biggests[1]] == self.x_positions[biggests[0]],
+        #                     self.y_positions[biggests[1]] >= self.y_positions[biggests[0]])))
 
         # # Cumulative over rows
         # for u in range(plate_height):
