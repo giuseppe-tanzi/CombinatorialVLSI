@@ -9,7 +9,7 @@ from src.utils.utils import write_solution
 
 class SMTsolverRot(SMTsolver):
 
-    def __init__(self, data, output_dir, timeout=300):
+    def __init__(self, data, output_dir, timeout):
         super().__init__(data, output_dir, timeout)
 
     def solve_instance(self, instance, ins_num):
@@ -80,7 +80,7 @@ class SMTsolverRot(SMTsolver):
                                 Sum(self.x_positions[j], self.w[j]) <= self.x_positions[i]))
 
                 #
-                # # Two rectangles with same dimensions
+                # # Breaking symmetry: two rectangles with same dimensions
                 # self.sol.add(Implies(And(self.w[i] == self.w[j], self.h[i] == self.h[j]),
                 #                      Or(self.x_positions[j] > self.x_positions[i],
                 #                         And(self.x_positions[j] == self.x_positions[i],
