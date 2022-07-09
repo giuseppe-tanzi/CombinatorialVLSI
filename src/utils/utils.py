@@ -65,9 +65,11 @@ def display_solution(title, sizes_plate, n_circuits, sizes_circuits, pos_circuit
     ax.set_ylim(0, sizes_plate[1] + 1)
     ax.set_xticks(range(sizes_plate[0] + 1))
     ax.set_yticks(range(sizes_plate[1] + 1))
+    ax.set_aspect('equal', adjustable='box')
     ax.set_xlabel('width_plate')
     ax.set_ylabel('height_plate')
 
+    plt.grid()
     plt.show()
 
 
