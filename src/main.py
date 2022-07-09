@@ -5,7 +5,6 @@ from lp.solve_optimize import LPsolver
 from lp.solve_rot_optimize import LPsolverRot
 from sat.solve import SATsolver
 from src.smt.solve import SMTsolver
-from src.smt.solveOMT import OMTsolver
 from src.smt.solve_rotation import SMTsolverRot
 from src.smt.solve_smtlib import SMTLIBsolver
 from src.smt.solve_smtlib_rotation import SMTLIBsolverRot
@@ -49,20 +48,21 @@ def main():
         else:
             solver = SMTsolver(data=data, output_dir=args.output_dir, timeout=int(args.timeout))
     elif args.solver == "smtlib":
+        if args.solsmtlib != 'z3' and args.solsmtlib != 'cvc5':
+            raise argparse.ArgumentError(None, "Please select a smtlib solver between z3 and cvc5.")
         if args.rotation:
-            solver = SMTLIBsolverRot(data=data, output_dir=args.output_dir, timeout=int(args.timeout))
+            solver = SMTLIBsolverRot(data=data, output_dir=args.output_dir, timeout=int(args.timeout),
+                                     solver=args.solsmtlib)
         else:
             solver = SMTLIBsolver(data=data, output_dir=args.output_dir, timeout=int(args.timeout),
                                   solver=args.solsmtlib)
-    elif args.solver == "omt":
-        solver = OMTsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=int(args.timeout))
     elif args.solver == "lp":
         if args.rotation:
             solver = LPsolverRot(data=data, output_dir=args.output_dir, timeout=int(args.timeout))
         else:
             solver = LPsolver(data=data, output_dir=args.output_dir, timeout=int(args.timeout))
     else:
-        raise argparse.ArgumentError("Please select a solver between cp, sat, smt and lp.")
+        raise argparse.ArgumentError(None, "Please select a solver between cp, sat, smt and lp.")
 
     print("Solving with", args.solver)
     solutions = solver.solve()

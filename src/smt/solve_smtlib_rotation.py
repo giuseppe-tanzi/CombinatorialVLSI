@@ -4,19 +4,19 @@ import time
 
 import numpy as np
 
-from src.smt.solveSMTLIB import SMTLIBsolver
+from src.smt.solve_smtlib import SMTLIBsolver
 from src.utils.utils import write_solution
 
 
 class SMTLIBsolverRot(SMTLIBsolver):
 
-    def __init__(self, data, output_dir, timeout=300):
-        super().__init__(data, output_dir, timeout)
+    def __init__(self, data, output_dir, timeout, solver):
+        super().__init__(data, output_dir, timeout, solver)
 
     def solve_instance(self, instance, ins_num):
         _, self.max_width, self.circuits = instance
         self.circuits_num = len(self.circuits)
-        self.file = self.input_dir + "instance_" + str(ins_num) + ".smt2"
+        self.file = self.instances_dir + "ins-" + str(ins_num) + ".smt2"
 
         widths, heights = ([i for i, _ in self.circuits], [j for _, j in self.circuits])
 
@@ -46,8 +46,12 @@ class SMTLIBsolverRot(SMTLIBsolver):
         for self.plate_height in range(lower_bound, upper_bound):
             lines = []
 
-            lines.append(f"(set-option :timeout {self.timeout * 1000})")
-            lines.append("(set-option :smt.threads 4)")
+            if self.solver == 'z3':
+                lines.append(f"(set-option :timeout {self.timeout * 1000})")
+                lines.append("(set-option :smt.threads 4)")
+            elif self.solver == 'cvc5':
+                lines.append(f"(set-option :produce-models true)")
+
             lines.append("(set-logic AUFLIA)")
 
             # Decision Variables
@@ -124,7 +128,12 @@ class SMTLIBsolverRot(SMTLIBsolver):
                 for line in lines:
                     f.write(line + "\n")
 
-            bashCommand = f"z3 -smt2 {self.file}"
+            if self.solver == 'z3':
+                bashCommand = f"z3 -smt2 {self.file}"
+            elif self.solver == 'cvc5':
+                bashCommand = f"cvc5 {self.file} --tlimit-per {self.timeout * 1000}"
+            else:
+                return None, 0
             process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
             start_time = time.time()
             output, _ = process.communicate()
@@ -139,17 +148,32 @@ class SMTLIBsolverRot(SMTLIBsolver):
                 return None, time_spent
 
     def parse_solution(self, solution):
-        text = solution.split("\r")
-        sat = re.compile(r'sat')
-        text = [i for i in text if not sat.match(i)]
-        text = [re.sub("\n", '', text[i]) for i in range(len(text))]
-        text = [i for i in text if i != '']
-        for i in range(len(text)):
-            text[i] = re.sub("\(|\)", '', text[i])
-            text[i] = text[i].split(" ")
-            text[i] = [j for j in text[i] if j != '']
+        if self.solver == 'z3':
+            text = solution.split("\r")
+            sat = re.compile(r'sat')
+            text = [i for i in text if not sat.match(i)]
+            text = [re.sub("\n", '', text[i]) for i in range(len(text))]
+            text = [i for i in text if i != '']
+            for i in range(len(text)):
+                text[i] = re.sub("\(|\)", '', text[i])
+                text[i] = text[i].split(" ")
+                text[i] = [j for j in text[i] if j != '']
 
-        self.w = [int(text[i][1]) for i in range(self.circuits_num * 4) if i % 4 == 0]
-        self.h = [int(text[i][1]) for i in range(self.circuits_num * 4) if i % 4 == 1]
-        self.x_positions = [int(text[i][1]) for i in range(self.circuits_num * 4) if i % 4 == 2]
-        self.y_positions = [int(text[i][1]) for i in range(self.circuits_num * 4) if i % 4 == 3]
+            self.w = [int(text[i][1]) for i in range(self.circuits_num * 4) if i % 4 == 0]
+            self.h = [int(text[i][1]) for i in range(self.circuits_num * 4) if i % 4 == 1]
+            self.x_positions = [int(text[i][1]) for i in range(self.circuits_num * 4) if i % 4 == 2]
+            self.y_positions = [int(text[i][1]) for i in range(self.circuits_num * 4) if i % 4 == 3]
+        elif self.solver == 'cvc5':
+            text = solution.split("\n")
+            text = [i for i in text if i != '']
+            text = text[1:]
+            for i in range(len(text)):
+                text[i] = re.sub("\r", "", text[i])
+                text[i] = re.sub("\(|\)", '', text[i])
+                text[i] = text[i].split(" ")
+            text = text[0]
+
+            self.w = [int(text[i]) for i in range(self.circuits_num * 8) if i % 8 == 1]
+            self.h = [int(text[i]) for i in range(self.circuits_num * 8) if i % 8 == 3]
+            self.x_positions = [int(text[i]) for i in range(self.circuits_num * 8) if i % 8 == 5]
+            self.y_positions = [int(text[i]) for i in range(self.circuits_num * 8) if i % 8 == 7]
