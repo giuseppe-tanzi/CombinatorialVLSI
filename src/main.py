@@ -1,7 +1,8 @@
 import argparse
 
 from cp.solve import CPsolver
-from lp.solve import LPsolver
+from lp.solve_optimize import LPsolver
+from lp.solve_rot_optimize import LPsolverRot
 from sat.solve import SATsolver
 from src.smt.solve import SMTsolver
 from src.smt.solveOMT import OMTsolver
@@ -54,7 +55,10 @@ def main():
     elif args.solver == "omt":
         solver = OMTsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=int(args.timeout))
     elif args.solver == "lp":
-        solver = LPsolver(data=data, rotation=args.rotation, output_dir=args.output_dir, timeout=int(args.timeout))
+        if args.rotation:
+            solver = LPsolverRot(data=data, output_dir=args.output_dir, timeout=int(args.timeout))
+        else:
+            solver = LPsolver(data=data, output_dir=args.output_dir, timeout=int(args.timeout))
     else:
         raise argparse.ArgumentError("Please select a solver between cp, sat, smt and lp.")
 

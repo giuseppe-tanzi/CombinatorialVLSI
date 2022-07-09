@@ -4,6 +4,7 @@ import time
 import multiprocessing
 import numpy as np
 
+
 class LPsolver:
 
     def __init__(self, data, rotation, output_dir, timeout):
@@ -52,7 +53,7 @@ class LPsolver:
 
             # creating the model
             solver = pywraplp.Solver.CreateSolver('SCIP')
-            solver.SetTimeLimit(self.timeout*1000)
+            solver.SetTimeLimit(self.timeout * 1000)
             # solver.EnableOutput()
             # solver.SetNumThreads(8)
 
@@ -68,8 +69,10 @@ class LPsolver:
             # ogni posizione p sulla plate non deve essere occupata da più di 1 circuito
             start_3 = time.time()
             print('Number of constraints: ', np.array(C[0]).shape[1])
-            for p in range(np.array(C[0]).shape[1]):
-                solver.Add(sum([C[i][j][p] * X[i][j] for i in range(self.circuits_num) for j in range(len(C[i]))]) <= 1)
+            solver.Add(
+                sum([C[i][j][k] * X[i][j] for i in range(self.circuits_num) for j in range(len(C[i])) for r in range(max_h) for k in
+                     range(r * self.max_width, r * self.max_width + self.max_width)]) <= (
+                            self.max_width * max_h))
             print('Second cycle time: ', time.time() - start_3)
 
             # ogni circuito deve essere piazzato esattamente una volta
@@ -80,7 +83,7 @@ class LPsolver:
 
             print('Instantiation time: ', (time.time() - start))
             status = solver.Solve()
-            total_time = solver.WallTime()/1000
+            total_time = solver.WallTime() / 1000
             print('Total time elapsed: ', total_time)
 
             if status == pywraplp.Solver.OPTIMAL:
