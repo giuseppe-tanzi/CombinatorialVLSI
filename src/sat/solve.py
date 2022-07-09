@@ -85,7 +85,7 @@ class SATsolver:
         # print("Lr \n", lr)
         # print("Ud \n", ud)
 
-        # Place a circuit one time
+        # Ensure that all circuit are placed
         for x in px:
             self.sol.add(Or([i for i in x]))
 
@@ -95,7 +95,7 @@ class SATsolver:
         #
         # Order constraint
         for i in range(self.circuits_num):
-            self.sol.add(px[i][-1])
+            # self.sol.add(px[i][-1])
             for j in range(self.max_width - self.w[i]):
                 self.sol.add(Or([Not(px[i][j]), px[i][j + 1]]))
             for j in range(plate_height - self.h[i]):
