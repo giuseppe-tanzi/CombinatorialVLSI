@@ -62,7 +62,7 @@ def display_solution(title, sizes_plate, n_circuits, sizes_circuits, pos_circuit
             rect = plt.Rectangle(pos_circuits[i], *sizes_circuits[i], edgecolor="#333", facecolor=cmap(i))
             ax.add_patch(rect)
     ax.set_xlim(0, sizes_plate[0])
-    ax.set_ylim(0, sizes_plate[1] + 1)
+    ax.set_ylim(0, sizes_plate[1])
     ax.set_xticks(range(sizes_plate[0] + 1))
     ax.set_yticks(range(sizes_plate[1] + 1))
     ax.set_aspect('equal', adjustable='box')
