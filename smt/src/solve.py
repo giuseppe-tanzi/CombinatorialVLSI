@@ -10,7 +10,7 @@ class SMTsolver:
     def __init__(self, data, output_dir, timeout):
         self.data = data
         if output_dir == "":
-            output_dir = "./smt/out"
+            output_dir = "./smt/out/no_rot"
         self.output_dir = output_dir
         self.timeout = timeout
 
