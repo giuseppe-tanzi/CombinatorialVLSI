@@ -25,7 +25,7 @@ class LPsolverRot(LPsolver):
         solver = pywraplp.Solver.CreateSolver('BOP')
         solver.SetTimeLimit(self.timeout * 1000)
         # solver.EnableOutput()
-        solver.SetNumThreads(6)
+        solver.SetNumThreads(8)
 
         max_h = sum(h)
 

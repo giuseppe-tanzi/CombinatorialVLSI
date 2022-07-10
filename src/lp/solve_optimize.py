@@ -36,7 +36,7 @@ class LPsolver:
         # creating the model
         solver = pywraplp.Solver.CreateSolver('BOP')
         solver.SetTimeLimit(self.timeout * 1000)
-        solver.SuppressOutput()
+        # solver.EnableOutput()
         solver.SetNumThreads(8)
 
         x = []

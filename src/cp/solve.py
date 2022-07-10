@@ -35,7 +35,7 @@ class CPsolver:
             instance["widths"] = [x for (x, _) in circuits]
             instance["heights"] = [y for (_, y) in circuits]
 
-            result = instance.solve(timeout=datetime.timedelta(seconds=self.timeout), processes=8)
+            result = instance.solve(timeout=datetime.timedelta(seconds=self.timeout), processes=10, random_seed=42)
 
             if result.status is Status.OPTIMAL_SOLUTION:
                 if self.rotation:
@@ -44,6 +44,7 @@ class CPsolver:
                 else:
                     circuits_pos = [(w, h, x, y) for (w, h), x, y in
                                     zip(circuits, result["coords_x"], result["coords_y"])]
+                print(result.statistics['propagations'])
                 plate_height = result.objective
 
                 write_solution(self.output_dir, ins_num, ((plate_width, plate_height), circuits_pos),
