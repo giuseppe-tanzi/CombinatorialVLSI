@@ -10,7 +10,7 @@ def write_solution(output_dir, n, solution, stat):
     print(f'{n})', solution, stat)
     if solution != None:
         os.makedirs(output_dir, exist_ok=True)
-        filename = os.path.join(output_dir, f"ins_{n}.txt")
+        filename = os.path.join(output_dir, f"out-{n}.txt")
         with open(filename, 'w') as sol:
             (plate_width, plate_height), circuits_pos = solution
             sol.write("{0} {1}\n".format(plate_width, plate_height))
