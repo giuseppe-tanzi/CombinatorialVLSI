@@ -15,7 +15,7 @@ it consists in deciding how to place a given set of rectangular circuits in a fi
 overlaps with any other, and the height of the plate is minimized.
 
 There are also many variant of this problem, but we considered the one in which each circuit can also be placed after a
-rotation of 90 degrees, so basically with width and height exchanged.
+rotation of 90°, so basically with width and height exchanged.
 
 In this repository you can find four solution for this problem which use four different approaches:
 
