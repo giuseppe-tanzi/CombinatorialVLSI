@@ -1,0 +1,27 @@
+% Pruned 50000 learnt clauses
+%%%mzn-stat: nodes=157422
+%%%mzn-stat: failures=147111
+%%%mzn-stat: restarts=3
+%%%mzn-stat: variables=31581
+%%%mzn-stat: intVars=175
+%%%mzn-stat: boolVariables=31404
+%%%mzn-stat: propagators=2154
+%%%mzn-stat: propagations=68739565
+%%%mzn-stat: peakDepth=60
+%%%mzn-stat: nogoods=147111
+%%%mzn-stat: backjumps=10157
+%%%mzn-stat: peakMem=0.00
+%%%mzn-stat: time=14.028
+%%%mzn-stat: initTime=0.053
+%%%mzn-stat: solveTime=13.975
+%%%mzn-stat: objective=26
+%%%mzn-stat: optTime=13.934
+%%%mzn-stat: baseMem=0.00
+%%%mzn-stat: trailMem=0.04
+%%%mzn-stat: randomSeed=1656344358
+Height : 26
+Coord X: [0, 11, 0, 0, 23, 11, 20, 17, 14, 0, 11, 14, 17, 20, 23, 3, 3, 7, 7, 3, 3, 7]
+Coord Y: [0, 22, 21, 15, 19, 14, 17, 16, 15, 3, 0, 0, 0, 0, 0, 23, 19, 21, 14, 11, 0, 0]
+----------
+==========
+15.068501710891724
