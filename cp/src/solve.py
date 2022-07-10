@@ -11,7 +11,7 @@ class CPsolver:
         self.data = data
         self.rotation = rotation
         if output_dir == "":
-            output_dir = "./cp/out/"
+            output_dir = "./cp/out/rot" if rotation else "./cp/out/no_rot"
         self.output_dir = output_dir
         self.timeout = timeout
         if rotation:
