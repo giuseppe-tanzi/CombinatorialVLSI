@@ -40,15 +40,15 @@ constraint diffn(
   
 % Cumulative constraint
 constraint cumulative(coords_y, shape_y_r, shape_x_r, W);
-constraint cumulative(coords_x, shape_x_r, shape_y_r, H);
+%constraint cumulative(coords_x, shape_x_r, shape_y_r, H);
   
 % Maximum effective width
 var int: W_E = max([coords_x[i] + shape_x_r[i] | i in CIRCUITS]);
 
 % breaking symmetries.
-%constraint symmetry_breaking_constraint(
-%  lex_lesseq(coords_y, [H - coords_y[i] - shape_y_r[i] | i in CIRCUITS])
-%);
+constraint symmetry_breaking_constraint(
+  lex_lesseq(coords_y, [H - coords_y[i] - shape_y_r[i] | i in CIRCUITS])
+);
 
 constraint symmetry_breaking_constraint(
   lex_lesseq(coords_x, [W_E - coords_x[i] - shape_x_r[i] | i in CIRCUITS])
