@@ -1,7 +1,6 @@
-from utils.utils import write_solution
+from utils import write_solution
 from ortools.linear_solver import pywraplp
 import time
-import multiprocessing
 import numpy as np
 
 
@@ -11,7 +10,7 @@ class LPsolver:
         self.data = data
         self.rotation = rotation
         if output_dir == "":
-            output_dir = "../data/output_lp/"
+            output_dir = "../../data/output_lp/"
         self.output_dir = output_dir
         self.timeout = timeout
         self.ins_num = None

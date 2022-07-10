@@ -2,7 +2,7 @@ import time
 from itertools import combinations
 
 from z3 import And, Or, Bool, sat, Not, Solver
-from utils.utils import write_solution
+from utils import write_solution
 
 
 class SATsolver:
@@ -15,7 +15,7 @@ class SATsolver:
         self.data = data
         self.rotation = rotation
         if output_dir == "":
-            output_dir = "../data/output_sat/"
+            output_dir = "./sat/out/"
         self.output_dir = output_dir
         self.timeout = timeout
 

@@ -3,8 +3,8 @@ import time
 import numpy as np
 from z3 import IntVector, Tactic, sat, BoolVector, If, And, Not, Or, Sum
 
-from src.smt.solve import SMTsolver
-from src.utils.utils import write_solution
+from smt.src.solve import SMTsolver
+from utils import write_solution
 
 
 class SMTsolverRot(SMTsolver):

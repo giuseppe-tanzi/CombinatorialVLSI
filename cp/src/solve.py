@@ -1,9 +1,8 @@
 import datetime
 
 from minizinc import Model, Solver, Status, Instance
-import numpy as np
 
-from utils.utils import write_solution
+from utils import write_solution
 
 
 class CPsolver:
@@ -12,13 +11,13 @@ class CPsolver:
         self.data = data
         self.rotation = rotation
         if output_dir == "":
-            output_dir = "../data/output_cp/"
+            output_dir = "./cp/out/"
         self.output_dir = output_dir
         self.timeout = timeout
         if rotation:
-            self.solver_path = ".\\cp\\model_with_rotations.mzn"
+            self.solver_path = ".\\cp\\src\\model_with_rotations.mzn"
         else:
-            self.solver_path = ".\\cp\\model.mzn"
+            self.solver_path = ".\\cp\\src\\model.mzn"
 
     def solve(self):
         model = Model(self.solver_path)

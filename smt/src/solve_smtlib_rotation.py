@@ -4,8 +4,8 @@ import time
 
 import numpy as np
 
-from src.smt.solve_smtlib import SMTLIBsolver
-from src.utils.utils import write_solution
+from smt.src.solve_smtlib import SMTLIBsolver
+from utils import write_solution
 
 
 class SMTLIBsolverRot(SMTLIBsolver):

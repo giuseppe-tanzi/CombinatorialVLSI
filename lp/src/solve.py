@@ -1,8 +1,7 @@
 import time
 
-import numpy as np
 from ortools.linear_solver import pywraplp
-from utils.utils import write_solution
+from utils import write_solution
 
 
 class LPsolver:
@@ -10,7 +9,7 @@ class LPsolver:
     def __init__(self, data, output_dir, timeout):
         self.data = data
         if output_dir == "":
-            output_dir = "../data/output_lp/"
+            output_dir = "./lp/out/"
         self.output_dir = output_dir
         self.timeout = timeout
         self.ins_num = None

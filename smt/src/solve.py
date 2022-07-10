@@ -1,7 +1,7 @@
 import time
 
 import numpy as np
-from utils.utils import write_solution
+from utils import write_solution
 from z3 import And, Or, sat, Sum, IntVector, Tactic, Implies, If
 
 
@@ -10,7 +10,7 @@ class SMTsolver:
     def __init__(self, data, output_dir, timeout):
         self.data = data
         if output_dir == "":
-            output_dir = "../data/output_smt/"
+            output_dir = "./smt/out"
         self.output_dir = output_dir
         self.timeout = timeout
 
@@ -25,7 +25,7 @@ class SMTsolver:
 
     def solve(self):
         solutions = []
-        for d in self.data[29:]:
+        for d in self.data:
             ins_num = d[0]
             solutions.append(self.solve_instance(d, ins_num))
         return solutions

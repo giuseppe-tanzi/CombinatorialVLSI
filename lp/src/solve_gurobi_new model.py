@@ -2,7 +2,7 @@ import time
 
 import numpy as np
 import gurobipy as gp
-from utils.utils import write_solution
+from utils import write_solution
 
 
 class LPsolver:
@@ -11,7 +11,7 @@ class LPsolver:
         self.data = data
         self.rotation = rotation
         if output_dir == "":
-            output_dir = "../data/output_lp/"
+            output_dir = "../../data/output_lp/"
         self.output_dir = output_dir
         self.timeout = timeout
         self.ins_num = None

@@ -1,14 +1,14 @@
 import argparse
 
-from cp.solve import CPsolver
-from lp.solve_optimize import LPsolver
-from lp.solve_rot_optimize import LPsolverRot
-from sat.solve import SATsolver
-from src.smt.solve import SMTsolver
-from src.smt.solve_rotation import SMTsolverRot
-from src.smt.solve_smtlib import SMTLIBsolver
-from src.smt.solve_smtlib_rotation import SMTLIBsolverRot
-from utils.utils import load_data, display_solution, plot_times
+from cp.src.solve import CPsolver
+from lp.src.solve_optimize import LPsolver
+from lp.src.solve_rot_optimize import LPsolverRot
+from sat.src.solve import SATsolver
+from smt.src.solve import SMTsolver
+from smt.src.solve_rotation import SMTsolverRot
+from smt.src.solve_smtlib import SMTLIBsolver
+from smt.src.solve_smtlib_rotation import SMTLIBsolverRot
+from utils import load_data, display_solution, plot_times
 
 
 def main():
@@ -20,7 +20,7 @@ def main():
                         default=0, type=int)
     parser.add_argument("-i", "--input_dir",
                         help="Directory where the instance txt files can be found",
-                        default="..\\data\\instances_txt\\", type=str)
+                        default=".\\input", type=str)
     parser.add_argument("-o", "--output_dir",
                         help="Directory where the output will be saved", default="")
     parser.add_argument("-r", "--rotation", help="Flag to decide whether it is possible use rotated circuits",

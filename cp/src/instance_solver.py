@@ -32,7 +32,7 @@ def main():
 
     model = "model_with_2_arrays.mzn"
     in_file = ".\instances_dzn\ins-" + str(args.instance) + ".dzn"
-    out_dir = "out/final"
+    out_dir = "../out/final"
 
     solve_instance(model, in_file, out_dir)
 

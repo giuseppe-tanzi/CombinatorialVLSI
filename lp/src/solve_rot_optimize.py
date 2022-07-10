@@ -1,9 +1,8 @@
 import time
-import numpy as np
 from ortools.linear_solver import pywraplp
-from utils.utils import write_solution
+from utils import write_solution
 
-from src.lp.solve import LPsolver
+from lp.src.solve import LPsolver
 
 
 class LPsolverRot(LPsolver):

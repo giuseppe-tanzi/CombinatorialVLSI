@@ -5,7 +5,7 @@ import time
 
 import numpy as np
 
-from src.utils.utils import write_solution
+from utils import write_solution
 
 
 class SMTLIBsolver:
