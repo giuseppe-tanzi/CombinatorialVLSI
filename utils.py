@@ -75,18 +75,30 @@ def display_solution(title, sizes_plate, n_circuits, sizes_circuits, pos_circuit
 
 def plot_times(output_dir):
     """Plot the barplot of the solving times taken from the solved instance results in output_dir"""
-    solutions_paths = glob(
-        os.path.join(output_dir, "*.txt"))
-    times = np.zeros(40)
+    solutions_paths_no_rot = glob(
+        os.path.join(output_dir + "/../no_rot", "*.txt"))
+    solutions_paths_rot = glob(
+        os.path.join(output_dir + "/../rot", "*.txt"))
+    times_no_rot = np.zeros(40)
+    times_rot = np.zeros(40)
     for i in range(1, 41):
-        for path in solutions_paths:
+        for path in solutions_paths_no_rot:
             if int(path[path.find("out-") + 4:path.find(".txt")]) == i:
                 with open(path, 'r') as f:
-                    times[i - 1] = float(f.readlines()[-1])
-    plt.bar(x=np.arange(1, len(times) + 1), height=times)
+                    times_no_rot[i - 1] = float(f.readlines()[-1])
+        for path in solutions_paths_rot:
+            if int(path[path.find("out-") + 4:path.find(".txt")]) == i:
+                with open(path, 'r') as f:
+                    times_rot[i - 1] = float(f.readlines()[-1])
+    x_axis = np.arange(1, len(times_no_rot) + 1)
+    plt.figure(figsize=(12, 6))
+    plt.bar(x=x_axis - 0.2, height=times_no_rot, width=0.4, label='no_rotation')
+    plt.bar(x=x_axis + 0.2, height=times_rot, width=0.4, label='rotation')
     plt.xlabel('Instance')
     plt.ylabel('Time (s)')
     plt.yscale("log")
+    plt.xticks(x_axis)
+    plt.legend()
     plt.ylim(1e-2,300)
     plt.savefig(os.path.join(output_dir, "times_plot.png"))
     plt.show()

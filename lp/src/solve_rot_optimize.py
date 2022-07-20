@@ -36,7 +36,6 @@ class LPsolverRot(LPsolver):
         widths = []
         heights = []
 
-        # widths_r[i] = widths[i] - rot[i]*widths[i] + rot[i]*heights[i]
         H = solver.IntVar(lb=lower_bound, ub=max_h, name='h')
         for i in range(self.circuits_num):
             widths.append(solver.IntVar(lb=min(w), ub=max(w), name=f'widths_{i}'))
