@@ -1,8 +1,9 @@
 import time
 
 import numpy as np
-from utils import write_solution
 from z3 import And, Or, sat, Sum, IntVector, Tactic, Implies, If
+
+from utils import write_solution
 
 
 class SMTsolver:
@@ -46,7 +47,7 @@ class SMTsolver:
         for plate_height in range(lower_bound, upper_bound + 1):
             self.sol = Tactic('auflia').solver()
             self.sol.set(timeout=self.timeout * 1000)
-            self.sol.set(threads=8)
+            self.sol.set(threads=4)
 
             self.set_constraints(plate_height, self.w, self.h)
 
@@ -71,7 +72,7 @@ class SMTsolver:
 
         areas_index = np.argsort([self.h[i] * self.w[i] for i in range(self.circuits_num)])
         areas_index = areas_index[::-1]
-        # biggests = areas_index[0], areas_index[1]
+        biggests = areas_index[0], areas_index[1]
 
         self.w = [self.w[areas_index[i]] for i in range(self.circuits_num)]
         self.h = [self.h[areas_index[i]] for i in range(self.circuits_num)]
@@ -110,10 +111,10 @@ class SMTsolver:
                 #                         Sum(self.x_positions[j],
                 #                             self.w[j]) <= self.x_positions[i])))
 
-        # # symmetry breaking : fix relative position of the two biggest rectangles
-        # self.sol.add(Or(self.x_positions[biggests[1]] > self.x_positions[biggests[0]],
-        #                 And(self.x_positions[biggests[1]] == self.x_positions[biggests[0]],
-        #                     self.y_positions[biggests[1]] >= self.y_positions[biggests[0]])))
+        # symmetry breaking : fix relative position of the two biggest rectangles
+        self.sol.add(Or(self.x_positions[biggests[1]] > self.x_positions[biggests[0]],
+                        And(self.x_positions[biggests[1]] == self.x_positions[biggests[0]],
+                            self.y_positions[biggests[1]] >= self.y_positions[biggests[0]])))
 
         # # Cumulative over rows
         # for u in range(plate_height):
