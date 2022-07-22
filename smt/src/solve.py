@@ -74,8 +74,8 @@ class SMTsolver:
         areas_index = areas_index[::-1]
         biggests = areas_index[0], areas_index[1]
 
-        self.w = [self.w[areas_index[i]] for i in range(self.circuits_num)]
-        self.h = [self.h[areas_index[i]] for i in range(self.circuits_num)]
+        # self.w = [self.w[areas_index[i]] for i in range(self.circuits_num)]
+        # self.h = [self.h[areas_index[i]] for i in range(self.circuits_num)]
 
         # CONSTRAINTS
 
