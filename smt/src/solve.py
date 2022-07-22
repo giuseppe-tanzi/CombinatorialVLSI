@@ -74,9 +74,6 @@ class SMTsolver:
         areas_index = areas_index[::-1]
         biggests = areas_index[0], areas_index[1]
 
-        # self.w = [self.w[areas_index[i]] for i in range(self.circuits_num)]
-        # self.h = [self.h[areas_index[i]] for i in range(self.circuits_num)]
-
         # CONSTRAINTS
 
         # Domains
@@ -100,27 +97,10 @@ class SMTsolver:
                                         And(self.x_positions[j] == self.x_positions[i],
                                             self.y_positions[j] >= self.y_positions[i]))))
 
-                # # If two rectangles cannot be packed side to side along the x axis
-                # self.sol.add(Implies(Sum(self.w[i], self.w[j]) > self.max_width,
-                #                      Or(Sum(self.y_positions[i], self.h[i]) <= self.y_positions[j],
-                #                         Sum(self.y_positions[j], self.h[j]) <= self.y_positions[i])))
-                # #
-                # # If two rectangles cannot be packed one over the other along the y axis
-                # self.sol.add(Implies(Sum(self.h[i], self.h[j]) > plate_height,
-                #                      Or(Sum(self.x_positions[i], self.w[i]) <= self.x_positions[j],
-                #                         Sum(self.x_positions[j],
-                #                             self.w[j]) <= self.x_positions[i])))
-
-        # symmetry breaking : fix relative position of the two biggest rectangles
+        # Symmetry breaking : fix relative position of the two biggest rectangles
         self.sol.add(Or(self.x_positions[biggests[1]] > self.x_positions[biggests[0]],
                         And(self.x_positions[biggests[1]] == self.x_positions[biggests[0]],
                             self.y_positions[biggests[1]] >= self.y_positions[biggests[0]])))
-
-        # # Cumulative over rows
-        # for u in range(plate_height):
-        #     self.sol.add(
-        #         self.max_width >= Sum([If(And(self.y_positions[i] <= u, u < Sum(self.y_positions[i], self.h[i])),
-        #                                   self.w[i], 0) for i in range(self.circuits_num)]))
 
         # Cumulative over columns
         for u in range(self.max_width):
