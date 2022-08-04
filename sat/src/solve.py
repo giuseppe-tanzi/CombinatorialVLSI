@@ -84,8 +84,10 @@ class SATsolver:
 
         # Under and left are two matrices representing the fact that the block is below or at the left of another block
         # e.g. under(i,j) represents that block i is below block j. (Same thing for left)
-        ud = [[Bool(f"ud_{i + 1}_{j + 1}") if i != j else 0 for j in range(self.circuits_num)] for i in range(self.circuits_num)]
-        lr = [[Bool(f"lt{i + 1}_{j + 1}") if j != i else 0 for j in range(self.circuits_num)] for i in range(self.circuits_num)]
+        ud = [[Bool(f"ud_{i + 1}_{j + 1}") if i != j else 0 for j in range(self.circuits_num)] for i in
+              range(self.circuits_num)]
+        lr = [[Bool(f"lt{i + 1}_{j + 1}") if j != i else 0 for j in range(self.circuits_num)] for i in
+              range(self.circuits_num)]
 
         # Each pair of block cannot overlap
         for i in range(self.circuits_num):
@@ -153,12 +155,12 @@ class SATsolver:
 
             if self.h[i] <= self.max_width:
                 self.sol.add(
-                    Or(And(Not(r[i]), *[Or(Not(px[i][e]), px[i][e + 1]) for e in range(0, self.max_width - self.w[i])]),
-                       And(r[i], *[Or(Not(px[i][e]), px[i][e + 1]) for e in range(0, self.max_width - self.h[i])])))
+                    Or(And(Not(r[i]), *[Or(Not(px[i][e]), px[i][e + 1]) for e in range(self.max_width - self.w[i])]),
+                       And(r[i], *[Or(Not(px[i][e]), px[i][e + 1]) for e in range(self.max_width - self.h[i])])))
 
                 self.sol.add(
-                    Or(And(Not(r[i]), *[Or(Not(py[i][f]), py[i][f + 1]) for f in range(0, plate_height - self.h[i])]),
-                       And(r[i], *[Or(Not(py[i][f]), py[i][f + 1]) for f in range(0, plate_height - self.w[i])])))
+                    Or(And(Not(r[i]), *[Or(Not(py[i][f]), py[i][f + 1]) for f in range(plate_height - self.h[i])]),
+                       And(r[i], *[Or(Not(py[i][f]), py[i][f + 1]) for f in range(plate_height - self.w[i])])))
 
                 # Implicit clauses also due to order encoding
                 self.sol.add(Or(And(Not(r[i]), *[px[i][e] for e in range(self.max_width - self.w[i], self.max_width)]),
@@ -168,18 +170,18 @@ class SATsolver:
                                 And(r[i], *[py[i][f] for f in range(plate_height - self.w[i], plate_height)])))
             else:
                 self.sol.add(Not(r[i]))
-                self.sol.add(*[Or(Not(px[i][e]), px[i][e + 1]) for e in range(0, self.max_width - self.w[i])])
-                self.sol.add(*[Or(Not(py[i][f]), py[i][f + 1]) for f in range(0, self.max_width - self.h[i])])
+                self.sol.add(*[Or(Not(px[i][e]), px[i][e + 1]) for e in range(self.max_width - self.w[i])])
+                self.sol.add(*[Or(Not(py[i][f]), py[i][f + 1]) for f in range(self.max_width - self.h[i])])
                 # Implicit clauses also due to order encoding
                 self.sol.add(*[px[i][e] for e in range(self.max_width - self.w[i], self.max_width)])
                 self.sol.add(*[py[i][f] for f in range(self.max_width - self.h[i], plate_height)])
 
-        # (original_width = original_height) ==> r == False
+        # Some cases in which rotation is not possible or useful.
+        # If the circuit is a square then it's useless to consider also its rotation.
         self.sol.add([Not(r[i]) for i in range(self.circuits_num) if self.w[i] == self.h[i]])
-        # original_height > plate_width ==> r == False
+        # If the height of a circuit is higher than the plate's width ==> Rotation is not possible
         self.sol.add([Not(r[i]) for i in range(self.circuits_num) if self.h[i] > self.max_width])
-
-        # original_width > plate_height ==> r == False
+        # If the width of a circuit is higher than the plate's height ==> Rotation is not possible
         self.sol.add([Not(r[i]) for i in range(self.circuits_num) if self.w[i] > plate_height])
 
         for i in range(self.circuits_num):
@@ -195,26 +197,26 @@ class SATsolver:
 
                         # 3-literals clauses for non overlapping, shown in the paper
                         self.sol.add(Or(And(Not(r[i]), *[Or(Not(lr[i][j]), px[i][e], Not(px[j][e + self.w[i]])) for e in
-                                                         range(0, self.max_width - self.w[i])]),
+                                                         range(self.max_width - self.w[i])]),
                                         And(r[i], *[Or(Not(lr[i][j]), px[i][e], Not(px[j][e + self.h[i]])) for e in
-                                                    range(0, self.max_width - self.h[i])])))
+                                                    range(self.max_width - self.h[i])])))
 
                         self.sol.add(Or(And(Not(r[j]), *[Or(Not(lr[j][i]), px[j][e], Not(px[i][e + self.w[j]])) for e in
-                                                         range(0, self.max_width - self.w[j])]),
+                                                         range(self.max_width - self.w[j])]),
                                         And(r[j], *[Or(Not(lr[j][i]), px[j][e], Not(px[i][e + self.h[j]])) for e in
-                                                    range(0, self.max_width - self.h[j])])))
+                                                    range(self.max_width - self.h[j])])))
 
                         self.sol.add(Or(And(Not(r[i]),
                                             *[Or(Not(ud[i][j]), py[i][f], Not(py[j][f + self.h[i]])) for f in
-                                              range(0, plate_height - self.h[i])]),
+                                              range(plate_height - self.h[i])]),
                                         And(r[i], *[Or(Not(ud[i][j]), py[i][f], Not(py[j][f + self.w[i]])) for f in
-                                                    range(0, plate_height - self.w[i])])))
+                                                    range(plate_height - self.w[i])])))
 
                         self.sol.add(Or(And(Not(r[j]),
                                             *[Or(Not(ud[j][i]), py[j][f], Not(py[i][f + self.h[j]])) for f in
-                                              range(0, plate_height - self.h[j])]),
+                                              range(plate_height - self.h[j])]),
                                         And(r[j], *[Or(Not(ud[j][i]), py[j][f], Not(py[i][f + self.w[j]])) for f in
-                                                    range(0, plate_height - self.w[j])])))
+                                                    range(plate_height - self.w[j])])))
 
                     else:
                         # lr(i,j) -> xj > wi, lower bound for xj
@@ -223,18 +225,18 @@ class SATsolver:
                         self.sol.add(Or(Not(ud[i][j]), Not(py[j][self.h[i] - 1])))
                         # 3-literals clauses for non overlapping, shown in the paper
                         self.sol.add(*[Or(Not(lr[i][j]), px[i][e], Not(px[j][e + self.w[i]])) for e in
-                                       range(0, self.max_width - self.w[i])])
+                                       range(self.max_width - self.w[i])])
 
                         self.sol.add(*[Or(Not(lr[j][i]), px[j][e], Not(px[i][e + self.w[j]])) for e in
-                                       range(0, self.max_width - self.w[j])])
+                                       range(self.max_width - self.w[j])])
 
                         self.sol.add(*[Or(Not(ud[i][j]), py[i][f], Not(py[j][f + self.h[i]])) for f in
-                                       range(0, plate_height - self.h[i])])
+                                       range(plate_height - self.h[i])])
 
                         self.sol.add(*[Or(Not(ud[j][i]), py[j][f], Not(py[i][f + self.h[j]])) for f in
-                                       range(0, plate_height - self.h[j])])
+                                       range(plate_height - self.h[j])])
 
-            # Large rectangle constraints from the paper
+        # Large rectangle constraints from the paper
         for (i, j) in itertools.combinations(range(self.circuits_num), 2):
             if self.w[i] + self.w[j] > self.max_width:
                 self.sol.add(Not(lr[i][j]))
@@ -263,7 +265,7 @@ class SATsolver:
         for i, (x, y) in enumerate(zip(xs, ys)):
             if r and not m.evaluate(r[i]):
                 circuits_pos.append((self.w[i], self.h[i], x, y))
-            elif (r and m.evaluate(r[i])):
+            elif r and m.evaluate(r[i]):
                 circuits_pos.append((self.h[i], self.w[i], x, y))
             else:
                 circuits_pos.append((self.w[i], self.h[i], x, y))
