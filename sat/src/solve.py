@@ -1,3 +1,4 @@
+import itertools
 import time
 from itertools import combinations
 
@@ -15,7 +16,10 @@ class SATsolver:
         self.data = data
         self.rotation = rotation
         if output_dir == "":
-            output_dir = "./sat/out/"
+            if rotation:
+                output_dir = "./sat/out/rot"
+            else:
+                output_dir = "./sat/out/no_rot"
         self.output_dir = output_dir
         self.timeout = timeout
 
@@ -45,11 +49,16 @@ class SATsolver:
         for plate_height in range(lower_bound, upper_bound + 1):
             self.sol = Solver()
             self.sol.set(timeout=self.timeout * 1000)
-            px, py = self.set_constraints(plate_height)
+            if not self.rotation:
+                px, py = self.set_constraints(plate_height)
+                r = None
+            else:
+                print("Solving with rotations")
+                px, py, r = self.set_constraints_rotation(plate_height)
 
             solve_time = time.time()
             if self.sol.check() == sat:
-                circuits_pos = self.evaluate(px, py)
+                circuits_pos = self.evaluate(px, py, r)
                 return ((self.max_width, plate_height), circuits_pos), (time.time() - solve_time)
             else:
                 try_timeout = round((self.timeout - (time.time() - start_time)))
@@ -70,91 +79,193 @@ class SATsolver:
     def set_constraints(self, plate_height):
         # print(self.max_width)
         # Variables
-        px = [[Bool(f"px_{i + 1}_{e}") for e in range(0, self.max_width - self.w[i] + 1)] for i in
-              range(self.circuits_num)]
-        py = [[Bool(f"py_{i + 1}_{f}") for f in range(0, plate_height - self.h[i] + 1)] for i in
-              range(self.circuits_num)]
+        px = [[Bool(f"px{i + 1}_{x}") for x in range(self.max_width)] for i in range(self.circuits_num)]
+        py = [[Bool(f"py{i + 1}_{y}") for y in range(plate_height)] for i in range(self.circuits_num)]
 
-        lr = [[Bool(f"lr_{i + 1}_{j + 1}") for j in range(self.circuits_num)] for i in
-              range(self.circuits_num)]
-        ud = [[Bool(f"ud_{i + 1}_{j + 1}") for j in range(self.circuits_num)] for i in
-              range(self.circuits_num)]
+        # Under and left are two matrices representing the fact that the block is below or at the left of another block
+        # e.g. under(i,j) represents that block i is below block j. (Same thing for left)
+        ud = [[Bool(f"ud_{i + 1}_{j + 1}") if i != j else 0 for j in range(self.circuits_num)] for i in range(self.circuits_num)]
+        lr = [[Bool(f"lt{i + 1}_{j + 1}") if j != i else 0 for j in range(self.circuits_num)] for i in range(self.circuits_num)]
 
-        # print("Px \n", px)
-        # print("Py \n", py)
-        # print("Lr \n", lr)
-        # print("Ud \n", ud)
-
-        # Ensure that all circuit are placed
-        for x in px:
-            self.sol.add(Or([i for i in x]))
-
-        for y in py:
-            self.sol.add(Or([i for i in y]))
-
-        #
-        # Order constraint
+        # Each pair of block cannot overlap
         for i in range(self.circuits_num):
-            # self.sol.add(px[i][-1])
-            for j in range(self.max_width - self.w[i]):
-                self.sol.add(Or([Not(px[i][j]), px[i][j + 1]]))
-            for j in range(plate_height - self.h[i]):
-                self.sol.add(Or([Not(py[i][j]), py[i][j + 1]]))
+            for j in range(i + 1, self.circuits_num):
+                self.sol.add(Or(lr[i][j], lr[j][i], ud[i][j], ud[j][i]))
 
-        #
-        # Non overlapping
-        for i in range(0, self.circuits_num):
-            for j in range(0, self.circuits_num):
-                if i < j:
-                    if len(px[j]) >= self.w[i]:
-                        self.sol.add(Or(Not(lr[i][j]), Not(px[j][self.w[i] - 1])))
-                    else:
-                        self.sol.add(Or(Not(lr[i][j]), Not(px[j][-1])))
-                    if len(px[i]) >= self.w[j]:
-                        self.sol.add(Or(Not(lr[j][i]), Not(px[i][self.w[j] - 1])))
-                    else:
-                        self.sol.add(Or(Not(lr[j][i]), Not(px[i][-1])))
-                    if len(py[j]) >= self.h[i]:
-                        self.sol.add(Or(Not(ud[i][j]), Not(py[j][self.h[i] - 1])))
-                    else:
-                        self.sol.add(Or(Not(ud[i][j]), Not(py[j][-1])))
-                    if len(py[i]) >= self.h[j]:
-                        self.sol.add(Or(Not(ud[j][i]), Not(py[i][self.h[j] - 1])))
-                    else:
-                        self.sol.add(Or(Not(ud[j][i]), Not(py[i][-1])))
+        # Clauses due to order ecoding
+        for i in range(self.circuits_num):
+            for e in range(self.max_width - self.w[i]):
+                self.sol.add(Or(Not(px[i][e]), px[i][e + 1]))
 
-                    self.sol.add(Or(lr[i][j], lr[j][i], ud[i][j], ud[j][i]))
+            for f in range(plate_height - self.h[i]):
+                self.sol.add(Or(Not(py[i][f]), py[i][f + 1]))
 
-                    for e in range(self.max_width - self.w[i]):
-                        if len(px[j]) - 1 >= e + self.w[i]:
-                            self.sol.add(Or(Not(lr[i][j]), px[i][e], Not(px[j][e + self.w[i]])))
-                        if len(px[i]) - 1 >= e + self.w[j]:
-                            self.sol.add(Or(Not(lr[j][i]), px[j][e], Not(px[i][e + self.w[j]])))
-                    for f in range(plate_height - self.h[j]):
-                        if len(py[j]) - 1 >= f + self.h[i]:
-                            self.sol.add(Or(Not(ud[i][j]), py[i][f], Not(py[j][f + self.h[i]])))
-                        if len(py[i]) - 1 >= f + self.h[j]:
-                            self.sol.add(Or(Not(ud[j][i]), py[j][f], Not(py[i][f + self.h[j]])))
+            # Implicit clauses also due to order encoding
+            for e in range(self.max_width - self.w[i], self.max_width):
+                self.sol.add(px[i][e])
+
+            for f in range(plate_height - self.h[i], plate_height):
+                self.sol.add(py[i][f])
+
+        for i in range(self.circuits_num):
+            for j in range(self.circuits_num):
+                if i != j:
+                    # lr(i,j) -> xj > wi, lower bound for xj
+                    self.sol.add(Or(Not(lr[i][j]), Not(px[j][self.w[i] - 1])))
+                    # ud(ri,rj)-> yj > hi, lower bound for yj
+                    self.sol.add(Or(Not(ud[i][j]), Not(py[j][self.h[i] - 1])))
+
+                    # 3-literals clauses for non overlapping, shown in the paper
+                    for e in range(0, self.max_width - self.w[i]):
+                        self.sol.add(Or(Not(lr[i][j]), px[i][e], Not(px[j][e + self.w[i]])))
+                    for e in range(0, self.max_width - self.w[j]):
+                        self.sol.add(Or(Not(lr[j][i]), px[j][e], Not(px[i][e + self.w[j]])))
+
+                    for f in range(0, plate_height - self.h[i]):
+                        self.sol.add(Or(Not(ud[i][j]), py[i][f], Not(py[j][f + self.h[i]])))
+                    for f in range(0, plate_height - self.h[j]):
+                        self.sol.add(Or(Not(ud[j][i]), py[j][f], Not(py[i][f + self.h[j]])))
 
         return px, py
 
-    def evaluate(self, px, py):
-        m = self.sol.model()
+    def set_constraints_rotation(self, plate_height):
+        # print(self.max_width)
+        # Variables
+        px = [[Bool(f"px{i + 1}_{x}") for x in range(self.max_width)] for i in range(self.circuits_num)]
+        py = [[Bool(f"py{i + 1}_{y}") for y in range(plate_height)] for i in range(self.circuits_num)]
 
+        # Under and left are two matrices representing the fact that the block is below or at the left of another block
+        # e.g. under(i,j) represents that block i is below block j. (Same thing for left)
+        ud = [[Bool(f"ud_{i + 1}_{j + 1}") if i != j else 0 for j in range(self.circuits_num)] for i in
+              range(self.circuits_num)]
+        lr = [[Bool(f"lt{i + 1}_{j + 1}") if j != i else 0 for j in range(self.circuits_num)] for i in
+              range(self.circuits_num)]
+
+        r = [Bool(f"r_{i + 1}") for i in range(self.circuits_num)]
+
+        # Each pair of block cannot overlap
+        for i in range(self.circuits_num):
+            for j in range(i + 1, self.circuits_num):
+                self.sol.add(Or(lr[i][j], lr[j][i], ud[i][j], ud[j][i]))
+
+        # Clauses due to order encoding
+        for i in range(self.circuits_num):
+
+            if self.h[i] <= self.max_width:
+                self.sol.add(
+                    Or(And(Not(r[i]), *[Or(Not(px[i][e]), px[i][e + 1]) for e in range(0, self.max_width - self.w[i])]),
+                       And(r[i], *[Or(Not(px[i][e]), px[i][e + 1]) for e in range(0, self.max_width - self.h[i])])))
+
+                self.sol.add(
+                    Or(And(Not(r[i]), *[Or(Not(py[i][f]), py[i][f + 1]) for f in range(0, plate_height - self.h[i])]),
+                       And(r[i], *[Or(Not(py[i][f]), py[i][f + 1]) for f in range(0, plate_height - self.w[i])])))
+
+                # Implicit clauses also due to order encoding
+                self.sol.add(Or(And(Not(r[i]), *[px[i][e] for e in range(self.max_width - self.w[i], self.max_width)]),
+                                And(r[i], *[px[i][e] for e in range(self.max_width - self.h[i], self.max_width)])))
+
+                self.sol.add(Or(And(Not(r[i]), *[py[i][f] for f in range(plate_height - self.h[i], plate_height)]),
+                                And(r[i], *[py[i][f] for f in range(plate_height - self.w[i], plate_height)])))
+            else:
+                self.sol.add(Not(r[i]))
+                self.sol.add(*[Or(Not(px[i][e]), px[i][e + 1]) for e in range(0, self.max_width - self.w[i])])
+                self.sol.add(*[Or(Not(py[i][f]), py[i][f + 1]) for f in range(0, self.max_width - self.h[i])])
+                # Implicit clauses also due to order encoding
+                self.sol.add(*[px[i][e] for e in range(self.max_width - self.w[i], self.max_width)])
+                self.sol.add(*[py[i][f] for f in range(self.max_width - self.h[i], plate_height)])
+
+        # (original_width = original_height) ==> r == False
+        self.sol.add([Not(r[i]) for i in range(self.circuits_num) if self.w[i] == self.h[i]])
+        # original_height > plate_width ==> r == False
+        self.sol.add([Not(r[i]) for i in range(self.circuits_num) if self.h[i] > self.max_width])
+
+        # original_width > plate_height ==> r == False
+        self.sol.add([Not(r[i]) for i in range(self.circuits_num) if self.w[i] > plate_height])
+
+        for i in range(self.circuits_num):
+            for j in range(self.circuits_num):
+                if i != j:
+                    if self.h[i] <= self.max_width:
+                        self.sol.add(Or(And(Not(r[i]), Or(Not(lr[i][j]), Not(px[j][self.w[i] - 1]))),
+                                        And(r[i], Or(Not(lr[i][j]), Not(px[j][self.h[i] - 1])))))
+
+                        # under(ri,rj)-> yj > hi, lower bound for yj
+                        self.sol.add(Or(And(Not(r[i]), Or(Not(ud[i][j]), Not(py[j][self.h[i] - 1]))),
+                                        And(r[i], Or(Not(ud[i][j]), Not(py[j][self.w[i] - 1])))))
+
+                        # 3-literals clauses for non overlapping, shown in the paper
+                        self.sol.add(Or(And(Not(r[i]), *[Or(Not(lr[i][j]), px[i][e], Not(px[j][e + self.w[i]])) for e in
+                                                         range(0, self.max_width - self.w[i])]),
+                                        And(r[i], *[Or(Not(lr[i][j]), px[i][e], Not(px[j][e + self.h[i]])) for e in
+                                                    range(0, self.max_width - self.h[i])])))
+
+                        self.sol.add(Or(And(Not(r[j]), *[Or(Not(lr[j][i]), px[j][e], Not(px[i][e + self.w[j]])) for e in
+                                                         range(0, self.max_width - self.w[j])]),
+                                        And(r[j], *[Or(Not(lr[j][i]), px[j][e], Not(px[i][e + self.h[j]])) for e in
+                                                    range(0, self.max_width - self.h[j])])))
+
+                        self.sol.add(Or(And(Not(r[i]),
+                                            *[Or(Not(ud[i][j]), py[i][f], Not(py[j][f + self.h[i]])) for f in
+                                              range(0, plate_height - self.h[i])]),
+                                        And(r[i], *[Or(Not(ud[i][j]), py[i][f], Not(py[j][f + self.w[i]])) for f in
+                                                    range(0, plate_height - self.w[i])])))
+
+                        self.sol.add(Or(And(Not(r[j]),
+                                            *[Or(Not(ud[j][i]), py[j][f], Not(py[i][f + self.h[j]])) for f in
+                                              range(0, plate_height - self.h[j])]),
+                                        And(r[j], *[Or(Not(ud[j][i]), py[j][f], Not(py[i][f + self.w[j]])) for f in
+                                                    range(0, plate_height - self.w[j])])))
+
+                    else:
+                        # lr(i,j) -> xj > wi, lower bound for xj
+                        self.sol.add(Or(Not(lr[i][j]), Not(px[j][self.w[i] - 1])))
+                        # ud(ri,rj)-> yj > hi, lower bound for yj
+                        self.sol.add(Or(Not(ud[i][j]), Not(py[j][self.h[i] - 1])))
+                        # 3-literals clauses for non overlapping, shown in the paper
+                        self.sol.add(*[Or(Not(lr[i][j]), px[i][e], Not(px[j][e + self.w[i]])) for e in
+                                       range(0, self.max_width - self.w[i])])
+
+                        self.sol.add(*[Or(Not(lr[j][i]), px[j][e], Not(px[i][e + self.w[j]])) for e in
+                                       range(0, self.max_width - self.w[j])])
+
+                        self.sol.add(*[Or(Not(ud[i][j]), py[i][f], Not(py[j][f + self.h[i]])) for f in
+                                       range(0, plate_height - self.h[i])])
+
+                        self.sol.add(*[Or(Not(ud[j][i]), py[j][f], Not(py[i][f + self.h[j]])) for f in
+                                       range(0, plate_height - self.h[j])])
+
+            # Large rectangle constraints from the paper
+        for (i, j) in itertools.combinations(range(self.circuits_num), 2):
+            if self.w[i] + self.w[j] > self.max_width:
+                self.sol.add(Not(lr[i][j]))
+                self.sol.add(Not(lr[j][i]))
+            if self.h[i] + self.h[j] > plate_height:
+                self.sol.add(Not(ud[i][j]))
+                self.sol.add(Not(ud[j][i]))
+
+        return px, py, r
+
+    def evaluate(self, px, py, r):
+        m = self.sol.model()
         circuits_pos = []
         xs = []
         ys = []
         for i in range(self.circuits_num):
             for e in range(len(px[i])):
-                if str(m.evaluate(px[i][e])) == 'True':
+                if m.evaluate(px[i][e]):
                     xs.append(e)
                     break
             for f in range(len(py[i])):
-                if str(m.evaluate(py[i][f])) == 'True':
+                if m.evaluate(py[i][f]):
                     ys.append(f)
                     break
 
         for i, (x, y) in enumerate(zip(xs, ys)):
-            circuits_pos.append((self.w[i], self.h[i], x, y))
+            if r and not m.evaluate(r[i]):
+                circuits_pos.append((self.w[i], self.h[i], x, y))
+            elif (r and m.evaluate(r[i])):
+                circuits_pos.append((self.h[i], self.w[i], x, y))
+            else:
+                circuits_pos.append((self.w[i], self.h[i], x, y))
 
         return circuits_pos
