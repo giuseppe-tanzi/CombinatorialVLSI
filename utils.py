@@ -99,6 +99,6 @@ def plot_times(output_dir):
     plt.yscale("log")
     plt.xticks(x_axis)
     plt.legend()
-    plt.ylim(1e-2,300)
+    plt.ylim(1e-2, 300)
     plt.savefig(os.path.join(output_dir, "times_plot.png"))
     plt.show()

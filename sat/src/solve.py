@@ -2,6 +2,7 @@ import itertools
 import time
 from itertools import combinations
 
+import numpy as np
 from z3 import And, Or, Bool, sat, Not, Solver
 from utils import write_solution
 
@@ -17,9 +18,9 @@ class SATsolver:
         self.rotation = rotation
         if output_dir == "":
             if rotation:
-                output_dir = "./sat/out/rot"
+                output_dir = "./sat/out/rot_sym"
             else:
-                output_dir = "./sat/out/no_rot"
+                output_dir = "./sat/out/no_rot_sym"
         self.output_dir = output_dir
         self.timeout = timeout
 
@@ -50,11 +51,11 @@ class SATsolver:
             self.sol = Solver()
             self.sol.set(timeout=self.timeout * 1000)
             if not self.rotation:
-                px, py = self.set_constraints(plate_height)
+                px, py = self.set_constraints(plate_height, symmetry_breaking=True)
                 r = None
             else:
                 print("Solving with rotations")
-                px, py, r = self.set_constraints_rotation(plate_height)
+                px, py, r = self.set_constraints_rotation(plate_height, symmetry_breaking=True)
 
             solve_time = time.time()
             if self.sol.check() == sat:
@@ -76,7 +77,8 @@ class SATsolver:
         self.sol.add(self.at_most_one(bool_vars))
         self.sol.add(self.at_least_one(bool_vars))
 
-    def set_constraints(self, plate_height):
+    def set_constraints(self, plate_height, symmetry_breaking=False):
+
         # print(self.max_width)
         # Variables
         px = [[Bool(f"px{i + 1}_{x}") for x in range(self.max_width)] for i in range(self.circuits_num)]
@@ -128,9 +130,28 @@ class SATsolver:
                     for f in range(0, plate_height - self.h[j]):
                         self.sol.add(Or(Not(ud[j][i]), py[j][f], Not(py[i][f + self.h[j]])))
 
+        if symmetry_breaking:
+            # domain reduction constraint
+            for i in range(int(np.floor((self.max_width - self.w[0]) / 2))):
+                self.sol.add(Not(px[0][i]))
+
+            for j in range(int(np.floor((plate_height - self.h[0]) / 2))):
+                self.sol.add(Not(py[0][j]))
+
+            for rect in range(1, self.circuits_num):
+                if self.w[rect] > np.ceil((self.max_width - self.w[0]) / 2):
+                    self.sol.add(Not(lr[0][rect]))
+                if self.h[rect] > np.ceil((plate_height - self.h[0]) / 2):
+                    self.sol.add(Not(ud[0][rect]))
+
+            # Same size rectangles
+            for (i, j) in itertools.combinations(range(self.circuits_num), 2):
+                if self.w[i] == self.w[j] and self.h[i] == self.h[j]:
+                    self.sol.add(Not(lr[j][i]))
+                    self.sol.add(Or(Not(ud[j][i]), lr[i][j]))
         return px, py
 
-    def set_constraints_rotation(self, plate_height):
+    def set_constraints_rotation(self, plate_height, symmetry_breaking=False):
         # print(self.max_width)
         # Variables
         px = [[Bool(f"px{i + 1}_{x}") for x in range(self.max_width)] for i in range(self.circuits_num)]
@@ -244,6 +265,20 @@ class SATsolver:
             if self.h[i] + self.h[j] > plate_height:
                 self.sol.add(Not(ud[i][j]))
                 self.sol.add(Not(ud[j][i]))
+
+        if symmetry_breaking:
+            if self.h[0] <= self.max_width:
+                self.sol.add(
+                    Or(And(r[0], *[Not(px[0][i]) for i in range(int(np.floor((self.max_width - self.h[0]) / 2)))]),
+                       And(Not(r[0]),
+                           *[Not(px[0][i]) for i in range(int(np.floor((self.max_width - self.w[0]) / 2)))])))
+
+                self.sol.add(
+                    Or(And(r[0], *[Not(py[0][j]) for j in range(int(np.floor((plate_height - self.w[0]) / 2)))]),
+                       And(Not(r[0]), *[Not(py[0][j]) for j in range(int(np.floor((plate_height - self.h[0]) / 2)))])))
+            else:
+                self.sol.add(And(*[Not(px[0][i]) for i in range(int(np.floor((self.max_width - self.w[0]) / 2)))]))
+                self.sol.add(And(*[Not(py[0][j]) for j in range(int(np.floor((plate_height - self.h[0]) / 2)))]))
 
         return px, py, r
 
