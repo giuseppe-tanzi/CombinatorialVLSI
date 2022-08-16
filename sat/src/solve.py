@@ -51,11 +51,11 @@ class SATsolver:
             self.sol = Solver()
             self.sol.set(timeout=self.timeout * 1000)
             if not self.rotation:
-                px, py = self.set_constraints(plate_height, symmetry_breaking=True)
+                px, py = self.set_constraints(plate_height)
                 r = None
             else:
                 print("Solving with rotations")
-                px, py, r = self.set_constraints_rotation(plate_height, symmetry_breaking=True)
+                px, py, r = self.set_constraints_rotation(plate_height)
 
             solve_time = time.time()
             if self.sol.check() == sat:
@@ -77,7 +77,7 @@ class SATsolver:
         self.sol.add(self.at_most_one(bool_vars))
         self.sol.add(self.at_least_one(bool_vars))
 
-    def set_constraints(self, plate_height, symmetry_breaking=False):
+    def set_constraints(self, plate_height, symmetry_breaking=True):
 
         # print(self.max_width)
         # Variables
@@ -96,7 +96,7 @@ class SATsolver:
             for j in range(i + 1, self.circuits_num):
                 self.sol.add(Or(lr[i][j], lr[j][i], ud[i][j], ud[j][i]))
 
-        # Clauses due to order ecoding
+        # Clauses due to order encoding
         for i in range(self.circuits_num):
             for e in range(self.max_width - self.w[i]):
                 self.sol.add(Or(Not(px[i][e]), px[i][e + 1]))
@@ -104,7 +104,7 @@ class SATsolver:
             for f in range(plate_height - self.h[i]):
                 self.sol.add(Or(Not(py[i][f]), py[i][f + 1]))
 
-            # Implicit clauses also due to order encoding
+            # Clauses to force the placement of all the circuits
             for e in range(self.max_width - self.w[i], self.max_width):
                 self.sol.add(px[i][e])
 
@@ -120,14 +120,14 @@ class SATsolver:
                     self.sol.add(Or(Not(ud[i][j]), Not(py[j][self.h[i] - 1])))
 
                     # 3-literals clauses for non overlapping, shown in the paper
-                    for e in range(0, self.max_width - self.w[i]):
+                    for e in range(self.max_width - self.w[i]):
                         self.sol.add(Or(Not(lr[i][j]), px[i][e], Not(px[j][e + self.w[i]])))
-                    for e in range(0, self.max_width - self.w[j]):
+                    for e in range(self.max_width - self.w[j]):
                         self.sol.add(Or(Not(lr[j][i]), px[j][e], Not(px[i][e + self.w[j]])))
 
-                    for f in range(0, plate_height - self.h[i]):
+                    for f in range(plate_height - self.h[i]):
                         self.sol.add(Or(Not(ud[i][j]), py[i][f], Not(py[j][f + self.h[i]])))
-                    for f in range(0, plate_height - self.h[j]):
+                    for f in range(plate_height - self.h[j]):
                         self.sol.add(Or(Not(ud[j][i]), py[j][f], Not(py[i][f + self.h[j]])))
 
         if symmetry_breaking:
@@ -151,7 +151,7 @@ class SATsolver:
                     self.sol.add(Or(Not(ud[j][i]), lr[i][j]))
         return px, py
 
-    def set_constraints_rotation(self, plate_height, symmetry_breaking=False):
+    def set_constraints_rotation(self, plate_height, symmetry_breaking=True):
         # print(self.max_width)
         # Variables
         px = [[Bool(f"px{i + 1}_{x}") for x in range(self.max_width)] for i in range(self.circuits_num)]
