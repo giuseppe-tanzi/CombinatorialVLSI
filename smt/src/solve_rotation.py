@@ -82,7 +82,7 @@ class SMTsolverRot(SMTsolver):
                                 Sum(self.x_positions[i], self.w[i]) <= self.x_positions[j],
                                 Sum(self.x_positions[j], self.w[j]) <= self.x_positions[i]))
 
-        # symmetry breaking : fix relative position of the two biggest rectangles
+        # Symmetry breaking : fix relative position of the two biggest rectangles
         self.sol.add(Or(self.x_positions[biggests[1]] > self.x_positions[biggests[0]],
                         And(self.x_positions[biggests[1]] == self.x_positions[biggests[0]],
                             self.y_positions[biggests[1]] >= self.y_positions[biggests[0]])))

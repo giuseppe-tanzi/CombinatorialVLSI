@@ -91,7 +91,7 @@ class SMTsolver:
                                 Sum(self.x_positions[i], self.w[i]) <= self.x_positions[j],
                                 Sum(self.x_positions[j], self.w[j]) <= self.x_positions[i]))
 
-                # Breaking symmetry: two rectangles with same dimensions
+                # Symmetry breaking: two rectangles with same dimensions
                 self.sol.add(Implies(And(self.w[i] == self.w[j], self.h[i] == self.h[j]),
                                      Or(self.x_positions[j] > self.x_positions[i],
                                         And(self.x_positions[j] == self.x_positions[i],
