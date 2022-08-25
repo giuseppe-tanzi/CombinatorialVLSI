@@ -74,7 +74,7 @@ class SMTsolver:
         areas_index = areas_index[::-1]
         biggests = areas_index[0], areas_index[1]
 
-        # CONSTRAINTS
+        # Constraints
 
         # Domains
         self.sol.add([And(0 <= self.x_positions[i], self.x_positions[i] <= self.max_width - self.w[i])
@@ -85,7 +85,7 @@ class SMTsolver:
 
         for i in range(1, self.circuits_num):
             for j in range(0, i):
-                # Don't overlap
+                # No Overlapping
                 self.sol.add(Or(Sum(self.y_positions[i], self.h[i]) <= self.y_positions[j],
                                 Sum(self.y_positions[j], self.h[j]) <= self.y_positions[i],
                                 Sum(self.x_positions[i], self.w[i]) <= self.x_positions[j],
