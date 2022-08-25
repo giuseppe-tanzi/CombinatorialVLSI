@@ -13,7 +13,7 @@ class SMTLIBsolver:
     def __init__(self, data, output_dir, timeout, solver):
         self.data = data
         if output_dir == "":
-            output_dir = "../data/output_smtlib/"
+            output_dir = "./smt/out/no_rot"
         self.output_dir = output_dir
         self.instances_dir = "smt/instances_smtlib/"
         os.makedirs(self.instances_dir, exist_ok=True)
