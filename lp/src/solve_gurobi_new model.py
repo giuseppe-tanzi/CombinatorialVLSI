@@ -73,46 +73,15 @@ class LPsolver:
             for i in range(self.circuits_num)]
         M = 1000
         for i in range(self.circuits_num):
-            # basic constraints of containment
-            model.Add(x[i] + widths[i] <= self.max_width)
-            model.Add(y[i] + heights[i] <= H)
+            model.add(H >= y[i] + h[i])
             # non overlapping constraints
             for j in range(i + 1, self.circuits_num):
-                model.Add(sum(d[i][j]) == 1)
+                model.Add(sum(d[i][j]) >= 1)
                 model.Add(x[i] + widths[i] <= x[j] + M * (1 - d[i][j][0]))
                 model.Add(x[j] + widths[j] <= x[i] + M * (1 - d[i][j][1]))
                 model.Add(y[i] + heights[i] <= y[j] + M * (1 - d[i][j][2]))
                 model.Add(y[j] + heights[j] <= y[i] + M * (1 - d[i][j][3]))
 
-        # cumulative constraint over rows
-        c_w = [[model.addVar(vtype='I', lb=0, ub=max(w), name=f'cw_{i}_{u}') for u in range(max_h)] for i in
-               range(self.circuits_num)]
-        delta = [[model.addVar(vtype='I', lb=0, ub=1, name=f'delta_{i}_{u}') for u in range(max_h)] for i in
-                 range(self.circuits_num)]
-        delta2 = [[model.addVar(vtype='I', lb=0, ub=1, name=f'delta_{i}_{u}') for u in range(max_h)] for i in
-                  range(self.circuits_num)]
-        delta3 = [[model.addVar(vtype='I', lb=0, ub=1, name=f'delta_{i}_{u}') for u in range(max_h)] for i in
-                  range(self.circuits_num)]
-
-        for i in range(self.circuits_num):
-            for u in range(max_h):
-                model.addConstr(u <= (y[i] + heights[i]) + M * delta[i][u])
-                model.addConstr(u >= (y[i] + heights[i]) - M * (1 - delta[i][u]))
-                model.addConstr(y[i] <= u + M * delta2[i][u])
-                model.addConstr(y[i] >= u - M * (1 - delta2[i][u]))
-                # delta3 = delta \/ delta2
-                model.addConstr(delta3[i][u] <= delta[i][u] + delta2[i][u])
-                model.addConstr(delta3[i][u] >= delta[i][u])
-                model.addConstr(delta3[i][u] >= delta2[i][u])
-
-                # c_w[i][u] = widths[i] if block i occupies a row at height u, otherwise is 0
-                model.addConstr(widths[i] - M * delta3[i][u] <= c_w[i][u])
-                model.addConstr(c_w[i][u] <= widths[i] + M * delta3[i][u])
-                model.addConstr(-M * (1 - delta3[i][u]) <= c_w[i][u])
-                model.addConstr(c_w[i][u] <= M * (1 - delta3[i][u]))
-
-        for u in range(max_h):
-            model.addConstr(self.max_width >= sum([c_w[i][u] for i in range(self.circuits_num)]))
 
         # print('Instantiation time: ', (time.time() - start))
         model.optimize(H)
