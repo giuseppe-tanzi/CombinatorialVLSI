@@ -12,6 +12,9 @@ class SMTLIBsolverRot(SMTLIBsolver):
 
     def __init__(self, data, output_dir, timeout, solver):
         super().__init__(data, output_dir, timeout, solver)
+        if output_dir == "":
+            output_dir = "./smt/out/rot"
+        self.output_dir = output_dir
 
     def solve_instance(self, instance, ins_num):
         _, self.max_width, self.circuits = instance
