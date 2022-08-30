@@ -1,3 +1,4 @@
+import os
 import re
 import subprocess
 import time
@@ -19,11 +20,20 @@ class SMTLIBsolverRot(SMTLIBsolver):
     def solve_instance(self, instance, ins_num):
         _, self.max_width, self.circuits = instance
         self.circuits_num = len(self.circuits)
-        self.file = self.instances_dir + "ins-" + str(ins_num) + ".smt2"
 
         widths, heights = ([i for i, _ in self.circuits], [j for _, j in self.circuits])
 
+        cwd = os.getcwd()
+        if self.solver == 'z3':
+            self.file = self.instances_dir + "ins-" + str(ins_num) + ".smt2"
+        elif self.solver == 'cvc5':
+            os.chdir(cwd + "/smt")
+            self.file = "instances_smtlib/" + "ins-" + str(ins_num) + ".smt2"
+
         solution, spent_time = self.set_constraints(widths, heights)
+
+        if self.solver == 'cvc5':
+            os.chdir(cwd)
 
         if solution is not None:
             self.parse_solution(solution)
