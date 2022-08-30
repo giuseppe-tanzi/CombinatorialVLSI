@@ -6,3 +6,9 @@ To run the solver you can simply execute the command:<br>
 <code>python main.py -s sat</code>
 
 For more instruction on the solver execution, refer to the main [README](../README.md).
+
+Result obtained by the model **without symmetry breaking constraint**:
+![Result](./out/times_plot.png)
+
+Result obtained by the model **with symmetry breaking constraint**:
+![ResultSym](./out/times_plot_sym.png)
