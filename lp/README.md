@@ -4,6 +4,6 @@ To run the solver you can simply execute the command:<br>
 
 For more instruction on the solver execution, refer to the main [README](../README.md).
 ### Gurobi solver results
-![Gurobi Results](./out/times_plot.png)
+![Gurobi Results](./out/times_plot_gurobi.png)
 ### BOP solver results
 ![BOP Results](./out/times_plot.png)
