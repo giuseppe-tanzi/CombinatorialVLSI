@@ -38,8 +38,8 @@ the following arguments:
   ./solver/out"
 - <code>-r, --rotation</code> Enable resolution with allowed 90° rotations. Disabled by default.
 - <code>-v, --visualize</code> Visualize the solution for each instance solved using matplotlib. Disabled by default.
-- <code>-p, --plot</code> If enabled, skip the solving process of all given instance and uses the output txt files for
-  the given solve to plot a graph of solving times. Disabled by default.
+- <code>-p, --plot</code> If enabled, skip the solving process of all given instances and uses the output txt files for
+  the given solver to plot a graph of solving times. Disabled by default.
 
 ## References
 
