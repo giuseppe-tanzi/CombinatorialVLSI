@@ -29,7 +29,7 @@ In this repository you can find four solution for this problem which use four di
 All the solvers can be used by running the file <code>main.py</code> with the command <code>python main.py</code> and
 the following arguments:
 
-- <code>-s solver, --solver solver</code> with solver = {cp, sat, smt, lp}. Selects the solver to use.
+- <code>-s solver, --solver solver</code> with solver = {cp, sat, smt, smtlib, lp}. Selects the solver to use.
 - <code>-t T, --timeout T</code> Set the timeout in T seconds, default = 300s.
 - <code>-n N, --num_instance N</code> Select an instance between 1 and 40, default = 0 means solve all.
 - <code>-i path, --input_dir path</code> Specify the path from where take the input txt files, default
