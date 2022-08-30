@@ -67,16 +67,6 @@ class SATsolver:
                     return None, 0
         return None, 0
 
-    def all_true(self, bool_vars):
-        return And(bool_vars)
-
-    def at_most_one(self, bool_vars):
-        return [Not(And(pair[0], pair[1])) for pair in combinations(bool_vars, 2)]
-
-    def exactly_one(self, bool_vars):
-        self.sol.add(self.at_most_one(bool_vars))
-        self.sol.add(self.at_least_one(bool_vars))
-
     def set_constraints(self, plate_height, symmetry_breaking=True):
 
         # print(self.max_width)
@@ -144,6 +134,15 @@ class SATsolver:
                 if self.h[rect] > np.ceil((plate_height - self.h[0]) / 2):
                     self.sol.add(Not(ud[0][rect]))
 
+            # Large rectangle constraints
+            for (i, j) in itertools.combinations(range(self.circuits_num), 2):
+                if self.w[i] + self.w[j] > self.max_width:
+                    self.sol.add(Not(lr[i][j]))
+                    self.sol.add(Not(lr[j][i]))
+                if self.h[i] + self.h[j] > plate_height:
+                    self.sol.add(Not(ud[i][j]))
+                    self.sol.add(Not(ud[j][i]))
+
             # Same size rectangles
             for (i, j) in itertools.combinations(range(self.circuits_num), 2):
                 if self.w[i] == self.w[j] and self.h[i] == self.h[j]:
@@ -173,7 +172,6 @@ class SATsolver:
 
         # Clauses due to order encoding
         for i in range(self.circuits_num):
-
             if self.h[i] <= self.max_width:
                 self.sol.add(
                     Or(And(Not(r[i]), *[Or(Not(px[i][e]), px[i][e + 1]) for e in range(self.max_width - self.w[i])]),
