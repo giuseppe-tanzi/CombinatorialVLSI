@@ -43,9 +43,18 @@ class SMTLIBsolver:
         self.circuits_num = len(self.circuits)
 
         self.w, self.h = ([i for i, _ in self.circuits], [j for _, j in self.circuits])
-        self.file = self.instances_dir + "ins-" + str(ins_num) + ".smt2"
+
+        cwd = os.getcwd()
+        if self.solver == 'z3':
+            self.file = self.instances_dir + "ins-" + str(ins_num) + ".smt2"
+        elif self.solver == 'cvc5':
+            os.chdir(cwd + "/smt")
+            self.file = "instances_smtlib/" + "ins-" + str(ins_num) + ".smt2"
 
         solution, spent_time = self.set_constraints(self.w, self.h)
+
+        if self.solver == 'cvc5':
+            os.chdir(cwd)
 
         if solution is not None:
             self.parse_solution(solution)
