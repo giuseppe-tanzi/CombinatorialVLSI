@@ -18,9 +18,9 @@ class SATsolver:
         self.rotation = rotation
         if output_dir == "":
             if rotation:
-                output_dir = "./sat/out/rot_sym"
+                output_dir = "./sat/out/rot"
             else:
-                output_dir = "./sat/out/no_rot_sym"
+                output_dir = "./sat/out/no_rot"
         self.output_dir = output_dir
         self.timeout = timeout
 
