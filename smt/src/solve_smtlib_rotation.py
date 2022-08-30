@@ -12,6 +12,9 @@ class SMTLIBsolverRot(SMTLIBsolver):
 
     def __init__(self, data, output_dir, timeout, solver):
         super().__init__(data, output_dir, timeout, solver)
+        if output_dir == "":
+            output_dir = "./smt/out/rot"
+        self.output_dir = output_dir
 
     def solve_instance(self, instance, ins_num):
         _, self.max_width, self.circuits = instance
@@ -40,8 +43,6 @@ class SMTLIBsolverRot(SMTLIBsolver):
         areas_index = np.argsort([heights[i] * widths[i] for i in range(self.circuits_num)])
         areas_index = areas_index[::-1]
         biggests = areas_index[0], areas_index[1]
-        widths = [widths[areas_index[i]] for i in range(self.circuits_num)]
-        heights = [heights[areas_index[i]] for i in range(self.circuits_num)]
 
         for self.plate_height in range(lower_bound, upper_bound):
             lines = []
@@ -68,6 +69,7 @@ class SMTLIBsolverRot(SMTLIBsolver):
             lines += [f"(assert (and (>= y_{i} 0) (<= y_{i} (- {self.plate_height} height_{i}))))"
                       for i in range(self.circuits_num)]
 
+            # Handling rotation
             for i in range(self.circuits_num):
                 lines.append(f"(assert (ite rotation_{i} "
                              f"(and (= {widths[i]} height_{i}) (= {heights[i]} width_{i})) "
@@ -78,7 +80,7 @@ class SMTLIBsolverRot(SMTLIBsolver):
 
             # Constraints
 
-            # DO NOT OVERLAP
+            # No Overlapping
             for i in range(self.circuits_num):
                 for j in range(0, i):
                     lines.append(f"(assert (or "
@@ -87,36 +89,15 @@ class SMTLIBsolverRot(SMTLIBsolver):
                                  f"(<= (+ y_{i} height_{i}) y_{j}) "
                                  f"(<= (+ y_{j} height_{j}) y_{i})))")
 
-                    # # Two rectangles with same dimensions
-                    # lines.append(f"(assert (=> (and (= width_{i} width_{j}) (= height_{i} height_{j}))"
-                    #              f" (or "
-                    #              f"(> x_{j} x_{i}) "
-                    #              f"(and (= x_{j} x_{i}) (>= y_{j} y_{i})))))")
-
-            # symmetry breaking : fix relative position of the two biggest rectangles
+            # Symmetry breaking : fix relative position of the two biggest rectangles
             lines.append(f'(assert (or '
                          f'(> x_{biggests[1]} x_{biggests[0]}) '
                          f'(and (= x_{biggests[1]} x_{biggests[0]}) (>= y_{biggests[1]} y_{biggests[0]}))))')
 
-            # # If two rectangles cannot be packed side to side along the x axis
-            # lines += [
-            #     f"(assert (=> (> (+ width_{i} width_{j}) {self.max_width}) (or (<= (+ y_{i} height_{i}) y_{j}) (<= (+ y_{j} height_{j}) y_{i}))))"
-            #     for i in range(self.circuits_num) for j in range(self.circuits_num) if i != j]
-            #
-            # # If two rectangles cannot be packed one over the other along the y axis
-            # lines += [
-            #     f"(assert (=> (> (+ height_{i} height_{j}) {self.plate_height}) (or (<= (+ x_{i} width_{i}) x_{j}) (<= (+ x_{j} width_{j}) x_{i}))))"
-            #     for i in range(self.circuits_num) for j in range(self.circuits_num) if i != j]
-
-            # SUM OVER ROWS (CUMULATIVE)
+            # Cumulative over rows
             for u in range(self.plate_height):
                 lines.append(
                     f"(assert (>= {self.max_width} (+ {' '.join([f'(ite (and (<= y_{i} {u}) (< {u} (+ y_{i} height_{i}))) width_{i} 0)' for i in range(self.circuits_num)])})))")
-
-            # # SUM OVER COLUMNS (CUMULATIVE)
-            # for u in range(self.max_width):
-            #     lines.append(
-            #         f"(assert (>= {self.plate_height} (+ {' '.join([f'(ite (and (<= x_{i} {u}) (< {u} (+ x_{i} width_{i}))) height_{i} 0)' for i in range(self.circuits_num)])})))")
 
             # Result
             lines.append("(check-sat)")
