@@ -67,7 +67,7 @@ class SATsolver:
                     return None, 0
         return None, 0
 
-    def set_constraints(self, plate_height, symmetry_breaking=True):
+    def set_constraints(self, plate_height, symmetry_breaking=False):
 
         # print(self.max_width)
         # Variables
