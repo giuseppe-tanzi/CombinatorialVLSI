@@ -70,11 +70,10 @@ class LPsolverRot(LPsolver):
         total_time = solver.WallTime() / 1000
 
         if status == pywraplp.Solver.OPTIMAL:
-            print([i.solution_value() for i in rot])
-            circuit_pos = [(w, h, x, y) for w, h, x, y in
+            circuit_pos = [(int(w), int(h), int(x), int(y)) for w, h, x, y in
                            zip([a.solution_value() for a in widths], [a.solution_value() for a in heights],
                                [a.solution_value() for a in x], [a.solution_value() for a in y])]
-            write_solution(self.output_dir, self.ins_num, ((self.max_width, H.solution_value()), circuit_pos),
+            write_solution(self.output_dir, self.ins_num, ((self.max_width, int(H.solution_value())), circuit_pos),
                            total_time)
             return self.ins_num, ((self.max_width, int(H.solution_value())), circuit_pos), total_time
         else:

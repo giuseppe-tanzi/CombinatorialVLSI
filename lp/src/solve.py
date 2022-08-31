@@ -64,10 +64,10 @@ class LPsolver:
         total_time = solver.WallTime() / 1000
 
         if status == pywraplp.Solver.OPTIMAL:
-            circuit_pos = [(width, height, x, y) for width, height, x, y in
+            circuit_pos = [(int(width), int(height), int(x), int(y)) for width, height, x, y in
                            zip(w, h, [a.solution_value() for a in x], [a.solution_value() for a in y])]
 
-            write_solution(self.output_dir, self.ins_num, ((self.max_width, H.solution_value()), circuit_pos), total_time)
+            write_solution(self.output_dir, self.ins_num, ((self.max_width, int(H.solution_value())), circuit_pos), total_time)
             return self.ins_num, ((self.max_width, int(H.solution_value())), circuit_pos), total_time
         else:
             write_solution(self.output_dir, self.ins_num, None, 0)
