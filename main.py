@@ -1,8 +1,8 @@
 import argparse
 
 from cp.src.solve import CPsolver
-from lp.src.solve_optimize import LPsolver
-from lp.src.solve_rot_optimize import LPsolverRot
+from lp.src.solve import LPsolver
+from lp.src.solve_rotation import LPsolverRot
 from sat.src.solve import SATsolver
 from smt.src.solve import SMTsolver
 from smt.src.solve_rotation import SMTsolverRot
