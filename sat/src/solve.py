@@ -8,10 +8,6 @@ from utils import write_solution
 
 class SATsolver:
 
-    def __init__(self, timeout=300, rotation=False):
-        self.timeout = timeout
-        self.rotation = rotation
-
     def __init__(self, data, rotation, output_dir, timeout):
         self.data = data
         self.rotation = rotation
