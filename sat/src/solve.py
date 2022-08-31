@@ -1,6 +1,5 @@
 import itertools
 import time
-from itertools import combinations
 
 import numpy as np
 from z3 import And, Or, Bool, sat, Not, Solver
@@ -46,7 +45,6 @@ class SATsolver:
         upper_bound = sum(self.h) - min(self.h)
 
         start_time = time.time()
-        try_timeout = self.timeout
         for plate_height in range(lower_bound, upper_bound + 1):
             self.sol = Solver()
             self.sol.set(timeout=self.timeout * 1000)
@@ -69,7 +67,6 @@ class SATsolver:
 
     def set_constraints(self, plate_height, symmetry_breaking=False):
 
-        # print(self.max_width)
         # Variables
         px = [[Bool(f"px{i + 1}_{x}") for x in range(self.max_width)] for i in range(self.circuits_num)]
         py = [[Bool(f"py{i + 1}_{y}") for y in range(plate_height)] for i in range(self.circuits_num)]
