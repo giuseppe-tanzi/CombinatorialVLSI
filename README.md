@@ -42,5 +42,11 @@ the following arguments:
   the given solver to plot a graph of solving times. Disabled by default.
 
 ## References
-
-https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0245267
+- [Takehide Soh, Katsumi Inoue, Naoyuki Tamura, Mutsunori Banbara, and Hidetomo Nabeshima.
+A sat-based method for solving the two-dimensional strip packing problem.](https://www.researchgate.net/publication/220445013_A_SAT-based_Method_for_Solving_the_Two-dimensional_Strip_Packing_Problem)
+- [Google OR-Tools](https://developers.google.com/optimization/reference/python/index_python)
+- [cvc5](https://cvc5.github.io/)
+- [z3](https://www.microsoft.com/en-us/research/project/z3-3/)
+- [minizinc](https://www.minizinc.org/)
+- [smtlib](https://smtlib.cs.uiowa.edu/)
+- [gurobi](https://www.gurobi.com/)
