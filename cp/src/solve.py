@@ -15,9 +15,9 @@ class CPsolver:
         self.output_dir = output_dir
         self.timeout = timeout
         if rotation:
-            self.solver_path = ".\\cp\\src\\model_with_rotations.mzn"
+            self.solver_path = ".\\cp\\src\\models\\model_with_rotations.mzn"
         else:
-            self.solver_path = ".\\cp\\src\\model.mzn"
+            self.solver_path = ".\\cp\\src\\models\\model.mzn"
 
     def solve(self):
         model = Model(self.solver_path)
