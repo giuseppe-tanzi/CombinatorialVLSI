@@ -7,8 +7,8 @@ import numpy as np
 
 def write_solution(output_dir, n, solution, stat):
     """Prints the solution to console and write it in a txt file"""
-    print(f'{n})', solution, stat)
-    if solution != None:
+    print(f'{n})', solution, "\nSolving time:", stat)
+    if solution is not None:
         os.makedirs(output_dir, exist_ok=True)
         filename = os.path.join(output_dir, f"out-{n}.txt")
         with open(filename, 'w') as sol:
@@ -19,7 +19,8 @@ def write_solution(output_dir, n, solution, stat):
                 w, h, x, y = c
                 sol.write("{0} {1} {2} {3}\n".format(w, h, x, y))
 
-            sol.write("{0}\n".format(stat))
+            # Write also the time at the end of the solution file.
+            # sol.write("{0}\n".format(stat))
 
 
 def load_instance(filename):

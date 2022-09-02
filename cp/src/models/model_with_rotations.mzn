@@ -11,13 +11,13 @@ set of int: CIRCUITS = 1..N;
 array[CIRCUITS] of int: w;
 array[CIRCUITS] of int: h;
 
-% upper bound for circuits' positions.
-int: max_X = W - min(w);
-int: max_Y = ub - min(h);
-
 % lower and upper bound for the total height H.
 int: lb = sum([w[i] * h[i]| i in CIRCUITS]) div W;
 int: ub = sum(h);
+
+% domain upper bound for circuits' positions.
+int: max_X = W - min(w);
+int: max_Y = ub - min(h);
 
 array[CIRCUITS] of var bool: rotation;
 
