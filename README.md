@@ -56,3 +56,4 @@ A sat-based method for solving the two-dimensional strip packing problem.](https
 - [minizinc](https://www.minizinc.org/)
 - [smtlib](https://smtlib.cs.uiowa.edu/)
 - [gurobi](https://www.gurobi.com/)
+- [chuffed](https://github.com/chuffed/chuffed)
