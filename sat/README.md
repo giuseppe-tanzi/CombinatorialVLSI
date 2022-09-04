@@ -7,8 +7,5 @@ To run the solver you can simply execute the command:<br>
 
 For more instruction on the solver execution, refer to the main [README](../README.md).
 
-Results obtained by the model **without symmetry breaking constraints**:
+### Results
 ![Result](./out/times_plot.png)
-
-Results obtained by the model **with symmetry breaking constraints**:
-![ResultSym](./out/times_plot_sym.png)
