@@ -27,6 +27,7 @@ In this repository you can find four solution for this problem which use four di
 ## Installation
 To install all the requirements run:
 <code>pip install -r requirements.txt</code>
+
 The software has been tested using python 3.9.
 
 ## Usage
