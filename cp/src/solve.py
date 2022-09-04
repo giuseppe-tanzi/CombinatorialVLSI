@@ -26,29 +26,34 @@ class CPsolver:
         solutions = []
 
         for d in self.data:
-            ins_num, plate_width, circuits = d
-            instance = Instance(or_tools, model)
-            instance["N"] = len(circuits)
-            instance["W"] = plate_width
-            instance["w"] = [x for (x, _) in circuits]
-            instance["h"] = [y for (_, y) in circuits]
+            try:
+                ins_num, plate_width, circuits = d
+                instance = Instance(or_tools, model)
+                instance["N"] = len(circuits)
+                instance["W"] = plate_width
+                instance["w"] = [x for (x, _) in circuits]
+                instance["h"] = [y for (_, y) in circuits]
 
-            result = instance.solve(timeout=datetime.timedelta(seconds=self.timeout), processes=10, random_seed=42)
+                result = instance.solve(timeout=datetime.timedelta(seconds=self.timeout), processes=10, random_seed=42)
 
-            if result.status is Status.OPTIMAL_SOLUTION:
-                if self.rotation:
-                    circuits_pos = [(w, h, x, y) if not r else (h, w, x, y) for (w, h), x, y, r in
-                                    zip(circuits, result["x"], result["y"], result["rotation"])]
-                else:
-                    circuits_pos = [(w, h, x, y) for (w, h), x, y in
-                                    zip(circuits, result["x"], result["y"])]
-                print(result.statistics['propagations'])
-                plate_height = result.objective
+                if result.status is Status.OPTIMAL_SOLUTION:
+                    if self.rotation:
+                        circuits_pos = [(w, h, x, y) if not r else (h, w, x, y) for (w, h), x, y, r in
+                                        zip(circuits, result["x"], result["y"], result["rotation"])]
+                    else:
+                        circuits_pos = [(w, h, x, y) for (w, h), x, y in
+                                        zip(circuits, result["x"], result["y"])]
+                    print(result.statistics['propagations'])
+                    plate_height = result.objective
 
-                write_solution(self.output_dir, ins_num, ((plate_width, plate_height), circuits_pos),
-                               result.statistics['time'] / 1000)
+                    write_solution(self.output_dir, ins_num, ((plate_width, plate_height), circuits_pos),
+                                   result.statistics['time'] / 1000)
 
-                solutions.append((ins_num, ((plate_width, plate_height), circuits_pos),
-                                  result.statistics['time'] / 1000))
+                    solutions.append((ins_num, ((plate_width, plate_height), circuits_pos),
+                                      result.statistics['time'] / 1000))
+            except:
+                # If no solution is found in timeout seconds,
+                # do nothing and pass to the next instance.
+                pass
 
         return solutions
