@@ -20,7 +20,7 @@ def main():
                         default=0, type=int)
     parser.add_argument("-i", "--input_dir",
                         help="Directory where the instance txt files can be found",
-                        default=".\\input", type=str)
+                        default="./input", type=str)
     parser.add_argument("-o", "--output_dir",
                         help="Directory where the output will be saved", default="")
     parser.add_argument("-r", "--rotation", help="Flag to decide whether it is possible use rotated circuits",
