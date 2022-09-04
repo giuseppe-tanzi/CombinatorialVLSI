@@ -64,7 +64,7 @@ def main():
     else:
         raise argparse.ArgumentError(None, "Please select a solver between cp, sat, smt and lp.")
 
-    print("Solving with", args.solver)
+    print("Solving with", args.solver, "rotation", args.rotation)
     solutions = solver.solve()
 
     if args.visualize:

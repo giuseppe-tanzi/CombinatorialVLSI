@@ -48,7 +48,6 @@ class SATsolver:
                 px, py = self.set_constraints(plate_height)
                 r = None
             else:
-                print("Solving with rotations")
                 px, py, r = self.set_constraints_rotation(plate_height)
 
             solve_time = time.time()
