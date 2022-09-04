@@ -24,10 +24,10 @@ def main():
     parser.add_argument("-o", "--output_dir",
                         help="Directory where the output will be saved", default="")
     parser.add_argument("-r", "--rotation", help="Flag to decide whether it is possible use rotated circuits",
-                        default=False, type=bool)
-    parser.add_argument("-v", "--visualize", help="Enable solution visualization", default=False, type=bool)
+                        default=False, action='store_true')
+    parser.add_argument("-v", "--visualize", help="Enable solution visualization", default=False, action='store_true')
     parser.add_argument("-t", "--timeout", help="Timeout in seconds", default=300)
-    parser.add_argument("-p", "--plot", help="Plot of solving times", default=False)
+    parser.add_argument("-p", "--plot", help="Plot of solving times", default=False, action='store_true')
     parser.add_argument("-sol", "--solsmtlib", help="Solver used for SMTLib", default="z3", type=str)
     args = parser.parse_args()
     print(args)
