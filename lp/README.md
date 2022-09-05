@@ -1,4 +1,5 @@
 # Integer linear programming
+A full description of the ideas and the implementation of this ILP model can be found in this [report](./lp_report.pdf).\
 To run the solver you can simply execute the command:<br>
 <code>python main.py -s lp</code>
 

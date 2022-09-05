@@ -1,5 +1,5 @@
 # Satisfiability modulo theory
-
+A full description of the ideas and the implementation of this SMT model can be found in this [report](./smt_report.pdf).\
 To run the solver you can simply execute the command:<br>
 <code>python main.py -s smt</code>
 
