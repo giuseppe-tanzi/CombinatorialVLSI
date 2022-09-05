@@ -6,7 +6,7 @@ Authors:
 - Flavio Pinzarrone
 - Giuseppe Tanzi <br>
 
-Project work for the "Combinatorial Decision Making and Optimization" course of the Artificial Intelligence master's
+[Project work](./CDMO_Project_2022.pdf) for the "Combinatorial Decision Making and Optimization" course of the Artificial Intelligence master's
 degree at University of Bologna.
 
 Very Large Scale Integration (VLSI) is a very well known problem both in literature and in industry. Also known as 2-D
