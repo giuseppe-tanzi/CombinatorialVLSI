@@ -21,8 +21,8 @@ In this repository you can find four solution for this problem which use four di
 
 - Constraint Programming ([CP](./cp))
 - [SAT](./sat)
-- Satisfiability Modulo Theory ([SMT](./sat))
-- Integer Linear Programming ([ILP](.lp))
+- Satisfiability Modulo Theory ([SMT](./smt))
+- Integer Linear Programming ([ILP](./lp))
 
 ## Installation
 To install all the requirements run:
