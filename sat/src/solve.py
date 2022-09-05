@@ -114,17 +114,24 @@ class SATsolver:
 
         if symmetry_breaking:
             # domain reduction constraint
-            for i in range(int(np.floor((self.max_width - self.w[0]) / 2))):
-                self.sol.add(Not(px[0][i]))
+            # find maximum rectangle by area:
+            m = 0
+            for i in range(1, self.circuits_num):
+                if self.w[i] * self.h[i] > self.w[m] * self.h[m]:
+                    m = i
 
-            for j in range(int(np.floor((plate_height - self.h[0]) / 2))):
-                self.sol.add(Not(py[0][j]))
+            for i in range(int(np.floor((self.max_width - self.w[m]) / 2))):
+                self.sol.add(Not(px[m][i]))
 
-            for rect in range(1, self.circuits_num):
-                if self.w[rect] > np.ceil((self.max_width - self.w[0]) / 2):
-                    self.sol.add(Not(lr[0][rect]))
-                if self.h[rect] > np.ceil((plate_height - self.h[0]) / 2):
-                    self.sol.add(Not(ud[0][rect]))
+            for j in range(int(np.floor((plate_height - self.h[m]) / 2))):
+                self.sol.add(Not(py[m][j]))
+
+            for i in range(self.circuits_num):
+                if i != m:
+                    if self.w[i] > np.ceil((self.max_width - self.w[m]) / 2):
+                        self.sol.add(Not(lr[m][i]))
+                    if self.h[i] > np.ceil((plate_height - self.h[m]) / 2):
+                        self.sol.add(Not(ud[m][i]))
 
             # Large rectangle constraints
             for (i, j) in itertools.combinations(range(self.circuits_num), 2):
@@ -142,7 +149,7 @@ class SATsolver:
                     self.sol.add(Or(Not(ud[j][i]), lr[i][j]))
         return px, py
 
-    def set_constraints_rotation(self, plate_height, symmetry_breaking=True):
+    def set_constraints_rotation(self, plate_height, symmetry_breaking=False):
         # print(self.max_width)
         # Variables
         px = [[Bool(f"px{i + 1}_{x}") for x in range(self.max_width)] for i in range(self.circuits_num)]
@@ -247,29 +254,27 @@ class SATsolver:
                         self.sol.add(*[Or(Not(ud[j][i]), py[j][f], Not(py[i][f + self.h[j]])) for f in
                                        range(plate_height - self.h[j])])
 
-        # Large rectangle constraints from the paper
-        for (i, j) in itertools.combinations(range(self.circuits_num), 2):
-            if self.w[i] + self.w[j] > self.max_width:
-                self.sol.add(Not(lr[i][j]))
-                self.sol.add(Not(lr[j][i]))
-            if self.h[i] + self.h[j] > plate_height:
-                self.sol.add(Not(ud[i][j]))
-                self.sol.add(Not(ud[j][i]))
 
         if symmetry_breaking:
-            if self.h[0] <= self.max_width:
+            # domain reduction constraint
+            # find maximum rectangle by area:
+            m = 0
+            for i in range(1, self.circuits_num):
+                if self.w[i] * self.h[i] > self.w[m] * self.h[m]:
+                    m = i
+
+            if self.h[m] <= self.max_width:
                 self.sol.add(
-                    Or(And(r[0], *[Not(px[0][i]) for i in range(int(np.floor((self.max_width - self.h[0]) / 2)))]),
-                       And(Not(r[0]),
-                           *[Not(px[0][i]) for i in range(int(np.floor((self.max_width - self.w[0]) / 2)))])))
+                    Or(And(r[m], *[Not(px[m][i]) for i in range(int(np.floor((self.max_width - self.h[m]) / 2)))]),
+                       And(Not(r[m]),
+                           *[Not(px[m][i]) for i in range(int(np.floor((self.max_width - self.w[m]) / 2)))])))
 
                 self.sol.add(
-                    Or(And(r[0], *[Not(py[0][j]) for j in range(int(np.floor((plate_height - self.w[0]) / 2)))]),
-                       And(Not(r[0]), *[Not(py[0][j]) for j in range(int(np.floor((plate_height - self.h[0]) / 2)))])))
+                    Or(And(r[m], *[Not(py[m][j]) for j in range(int(np.floor((plate_height - self.w[m]) / 2)))]),
+                       And(Not(r[m]), *[Not(py[m][j]) for j in range(int(np.floor((plate_height - self.h[m]) / 2)))])))
             else:
-                self.sol.add(And(*[Not(px[0][i]) for i in range(int(np.floor((self.max_width - self.w[0]) / 2)))]))
-                self.sol.add(And(*[Not(py[0][j]) for j in range(int(np.floor((plate_height - self.h[0]) / 2)))]))
-
+                self.sol.add(And(*[Not(px[m][i]) for i in range(int(np.floor((self.max_width - self.w[m]) / 2)))]))
+                self.sol.add(And(*[Not(py[m][j]) for j in range(int(np.floor((plate_height - self.h[m]) / 2)))]))
         return px, py, r
 
     def evaluate(self, px, py, r):
