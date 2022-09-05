@@ -96,9 +96,9 @@ class SATsolver:
         for i in range(self.circuits_num):
             for j in range(self.circuits_num):
                 if i != j:
-                    # lr(i,j) -> xj > wi, lower bound for xj
+                    # lr_{i,j} -> xj > wi, lower bound for xj
                     self.sol.add(Or(Not(lr[i][j]), Not(px[j][self.w[i] - 1])))
-                    # ud(ri,rj)-> yj > hi, lower bound for yj
+                    # ud_{i,j}-> yj > hi, lower bound for yj
                     self.sol.add(Or(Not(ud[i][j]), Not(py[j][self.h[i] - 1])))
 
                     # 3-literals clauses for non overlapping, shown in the paper
@@ -253,7 +253,6 @@ class SATsolver:
 
                         self.sol.add(*[Or(Not(ud[j][i]), py[j][f], Not(py[i][f + self.h[j]])) for f in
                                        range(plate_height - self.h[j])])
-
 
         if symmetry_breaking:
             # domain reduction constraint
